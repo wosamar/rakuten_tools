@@ -11,5 +11,5 @@ class Template(Enum):
 
     @property
     def path(self) -> Path:
-        template_dir = BASE_DIR / "page_designs" / "templates"
+        template_dir = BASE_DIR / "scripts" / "page_designs" / "templates"
         return template_dir / self.value

@@ -1,6 +1,6 @@
-# for outputs
-page_designs/output/
-images
+# for files
+input/
+output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

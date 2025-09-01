@@ -141,6 +141,5 @@ if __name__ == '__main__':
     twe-shinebeam-01
     """
 
-    auth_token = utils.get_auth_token()
-    cabinet = RakutenCabinet(auth_token)
+    cabinet = RakutenCabinet(utils.get_auth_token())
     images = cabinet.run(sku_input)

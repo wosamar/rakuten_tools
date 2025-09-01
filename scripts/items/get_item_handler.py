@@ -1,7 +1,7 @@
 import os
 import requests
 import utils
-from items.models import ProductImage, ProductData
+from scripts.items.models import ProductImage, ProductData
 
 
 class RakutenImageFetcher:

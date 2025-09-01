@@ -1,7 +1,7 @@
 import requests
 import json
 
-from items.models import ProductData
+from scripts.items.models import ProductData
 
 
 class ProductUpdater:

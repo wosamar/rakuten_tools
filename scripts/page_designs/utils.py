@@ -4,7 +4,7 @@ import re
 import shutil
 from pathlib import Path
 
-from page_designs.models import ProductDescriptionData
+from scripts.page_designs.models import ProductDescriptionData
 
 
 def copy_html_files(folder_name, start=2, end=5):
