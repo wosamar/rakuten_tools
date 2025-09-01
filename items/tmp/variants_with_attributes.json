@@ -1,0 +1,1252 @@
+{
+  "variants": {
+    "tra-immoto-02type-08": {
+      "selectorValues": {
+        "Key2": "ライトピンク",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-08.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-08",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-09": {
+      "selectorValues": {
+        "Key2": "グラスグリーン",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-09.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-09",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-04": {
+      "selectorValues": {
+        "Key2": "ブライトオレンジ",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-04.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-04",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-05": {
+      "selectorValues": {
+        "Key2": "シルバーブラック",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-05.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-05",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-06": {
+      "selectorValues": {
+        "Key2": "グレーブルー",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-06.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-06",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-07": {
+      "selectorValues": {
+        "Key2": "ブライトブルー",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-07.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-07",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-22": {
+      "selectorValues": {
+        "Key2": "ブライトオレンジ",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-22.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-22",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-01": {
+      "selectorValues": {
+        "Key2": "ブライトブルー",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-01.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-01",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-23": {
+      "selectorValues": {
+        "Key2": "シルバーブラック",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-23.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-23",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-02": {
+      "selectorValues": {
+        "Key2": "ライトピンク",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-02.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-02",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-24": {
+      "selectorValues": {
+        "Key2": "グレーブルー",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-24.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-24",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-03": {
+      "selectorValues": {
+        "Key2": "グラスグリーン",
+        "Key1": "80cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-03.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-03",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-20": {
+      "selectorValues": {
+        "Key2": "ライトピンク",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-20.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-20",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-21": {
+      "selectorValues": {
+        "Key2": "グラスグリーン",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-21.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-21",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-19": {
+      "selectorValues": {
+        "Key2": "ブライトブルー",
+        "Key1": "30cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-19.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-19",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-15": {
+      "selectorValues": {
+        "Key2": "グラスグリーン",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-15.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-15",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-16": {
+      "selectorValues": {
+        "Key2": "ブライトオレンジ",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-16.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-16",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-17": {
+      "selectorValues": {
+        "Key2": "シルバーブラック",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-17.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-17",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-18": {
+      "selectorValues": {
+        "Key2": "グレーブルー",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-18.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-18",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-11": {
+      "selectorValues": {
+        "Key2": "シルバーブラック",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-11.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-11",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-12": {
+      "selectorValues": {
+        "Key2": "グレーブルー",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-12.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-12",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-13": {
+      "selectorValues": {
+        "Key2": "ブライトブルー",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-13.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-13",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-14": {
+      "selectorValues": {
+        "Key2": "ライトピンク",
+        "Key1": "30cm",
+        "Key0": "デュアルType-C"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-14.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "2978",
+      "referencePrice": {
+        "displayType": "SHOP_SETTING"
+      },
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-14",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    },
+    "tra-immoto-02type-10": {
+      "selectorValues": {
+        "Key2": "ブライトオレンジ",
+        "Key1": "80cm",
+        "Key0": "Type-CからLightningへ"
+      },
+      "images": [
+        {
+          "type": "CABINET",
+          "location": "/immoto/tra-immoto-02type-10.jpg"
+        }
+      ],
+      "restockOnCancel": true,
+      "backOrderFlag": false,
+      "normalDeliveryDateId": 1,
+      "articleNumber": {
+        "exemptionReason": 5
+      },
+      "standardPrice": "3387",
+      "shipping": {
+        "postageIncluded": true,
+        "singleItemShipping": 0
+      },
+      "merchantDefinedSkuId": "tra-immoto-02type-10",
+      "hidden": false,
+      "features": {
+        "restockNotification": false,
+        "noshi": false
+      },
+      "attributes": [
+        {
+          "name": "ブランド名",
+          "values": [
+            "immoto"
+          ]
+        },
+        {
+          "name": "メーカー型番",
+          "values": [
+            "-"
+          ]
+        },
+        {
+          "name": "代表カラー",
+          "values": [
+            "ブラック"
+          ]
+        }
+      ]
+    }
+  }
+}
