@@ -4,9 +4,11 @@ from pathlib import Path
 
 
 class ProductDocExtractor:
-    def __init__(self, excel_path: str):
+    def __init__(self, shop_name: str, excel_path: str):
         self.excel_path = Path(excel_path)
         self.xls = pd.ExcelFile(self.excel_path)
+
+        self.shop_name = shop_name
 
     def _parse_sheet(self, sheet: str) -> dict:
         df = pd.read_excel(self.excel_path, sheet_name=sheet, header=None)
@@ -43,7 +45,11 @@ class ProductDocExtractor:
                     c_val = df.iloc[k, 2]
                     if pd.notna(c_val):
                         key = str(a_val).split("\n")[0].strip()  # 只取換行前部分
-                        product_info[key] = str(c_val).strip()
+                        value = str(c_val).strip()
+                        if key in product_info:
+                            product_info[key] += f" \n {value}"  # 用分隔符號接在後面
+                        else:
+                            product_info[key] = value
 
         return {
             "image_amount": image_amount,
@@ -57,7 +63,7 @@ class ProductDocExtractor:
         sheets = [s for s in self.xls.sheet_names if "文案" in s]
         return {s: self._parse_sheet(s) for s in sheets}
 
-    def to_json_files(self, out_dir: str, shop_code: str):
+    def to_json_files(self, out_dir: str):
         data = self.extract()
         out_path = Path(out_dir)
         out_path.mkdir(parents=True, exist_ok=True)
@@ -65,10 +71,10 @@ class ProductDocExtractor:
 
         for product_id, (sheet, content) in enumerate(data.items(), start=1):
             product_id = "{:02d}".format(product_id)
-            filename = f"{shop_code}-{product_id}.json"
+            filename = f"{self.shop_name}-{product_id}.json"
             file = out_path / filename
 
-            content["shop_code"] = shop_code
+            content["shop_code"] = self.shop_name
             content["product_id"] = product_id
             with open(file, "w", encoding="utf-8") as f:
                 json.dump(content, f, ensure_ascii=False, indent=2)

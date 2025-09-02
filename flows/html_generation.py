@@ -1,19 +1,19 @@
 from pathlib import Path
 from typing import List
 
-from env_settings import BASE_DIR
+from env_settings import EnvSettings
+from scripts.items.item_handler import ItemHandler
 from scripts.items.models import ProductData, ProductDescription
-from scripts.items.update_item_handler import ProductUpdater
 from scripts.page_designs.enum import Template
 from scripts.page_designs.excel_parser import ProductDocExtractor
 from scripts.page_designs.html_generator import HTMLGenerator
-from scripts.page_designs.utils import load_product_from_json
+from scripts.page_designs.models import ProductDescriptionData
 from utils import get_auth_token
 
+env_settings = EnvSettings()
 
-def run(shop_code: str,
-        input_dir: Path,  # for excel、json input
-        output_dir: Path,  # for html output
+
+def run(shop_name: str,
         excel_name: str = None, product_names: List[str] = None,
         update_item: bool = True, is_test: bool = False):
     if not excel_name and not product_names:
@@ -21,8 +21,8 @@ def run(shop_code: str,
 
     # 讀 excel 並存成 json
     if excel_name:
-        extractor = ProductDocExtractor(str(input_dir / "excel" / excel_name))
-        product_names = extractor.to_json_files(out_dir=str(input_dir / "json"), shop_code=shop_code)
+        extractor = ProductDocExtractor(shop_name, excel_path=str(env_settings.excel_dir / excel_name))
+        product_names = extractor.to_json_files(out_dir=str(env_settings.json_dir / shop_name))
 
     # 設定各HTML template
     template_generators = {
@@ -31,14 +31,15 @@ def run(shop_code: str,
         Template.MOBILE.value: HTMLGenerator(template_path=str(Template.MOBILE.path)),
     }
 
-    product_updater = ProductUpdater(auth_token=get_auth_token())
+    output_dir = env_settings.html_dir / shop_name
+    item_handler = ItemHandler(auth_token=get_auth_token())
 
     # 讀 Json 建 HTML
     for product_name in product_names:
-        product = load_product_from_json(input_dir / "json" / product_name)
+        product = ProductDescriptionData.from_json(env_settings.json_dir / shop_name / product_name)
         for template_type, generator in template_generators.items():
-            output_path = output_dir / f"{product.shop_code}-{product.product_id}-{template_type}"
-            generator.generate_html(product.to_dict(), output_path=str(output_path))
+            file_name = f"{product.shop_code}-{product.product_id}-{template_type}"
+            generator.generate_html(product.to_dict(), out_dir=str(output_dir), file_name=file_name)
 
         # 更新至樂天後台
         if update_item:
@@ -58,30 +59,29 @@ def run(shop_code: str,
             product_data.product_description = ProductDescription(pc=pc_html, sp=sp_html)
             product_data.sales_description = sales_html
 
-            # TODO:錯誤處理
-            print(product_updater.patch_item(product_data))
+            resp = item_handler.patch_item(product_data)
+            if resp != 204:
+                raise Exception(resp.status_code, resp.text)
 
         if is_test:
             break
 
 
 if __name__ == '__main__':
-    shop_id = "tra-sonnac"
-    in_dir = BASE_DIR / "input"
-    out_dir = BASE_DIR / "output" / "html" / "sonnac"
-    excel_n = "02_建治_商品資訊及文案_2025_雜.xlsx"
+    shop_n = "tra-sonnac"
+    excel_n = "tra-sonnac.xlsx"
     product_ns = [
-        # "tra-sonnac-01.json",
-        # "tra-sonnac-02.json",
-        # "tra-sonnac-03.json",
-        # "tra-sonnac-04.json",
+        "tra-sonnac-01.json",
+        "tra-sonnac-02.json",
+        "tra-sonnac-03.json",
+        "tra-sonnac-04.json",
         "tra-sonnac-05.json",
     ]
 
     run(
-        shop_id, in_dir, out_dir,
-        # excel_name=excel_n,
-        product_names=product_ns,
-        # update_item=False,
+        shop_n,
+        excel_name=excel_n,
+        # product_names=product_ns,
+        update_item=False,
         is_test=True
     )

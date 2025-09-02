@@ -4,7 +4,7 @@ import json
 from scripts.items.models import ProductData
 
 
-class ProductUpdater:
+class ItemHandler:
     def __init__(self, auth_token: str):
         self.endpoint_template = "https://api.rms.rakuten.co.jp/es/2.0/items/manage-numbers/{manageNumber}"
         self.headers = {
@@ -16,4 +16,4 @@ class ProductUpdater:
         url = self.endpoint_template.format(manageNumber=product.manage_number)
         data = product.to_patch_payload()
         resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
-        return resp.status_code, resp.text
+        return resp

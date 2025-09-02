@@ -1,3 +1,5 @@
+from pathlib import Path
+
 cabinet_prefix = "https://image.rakuten.co.jp/giftoftw/cabinet"
 
 
@@ -20,9 +22,23 @@ class ProductDescriptionData:
         for i in range(image_amount):
             img_path = f"{shop_code}-{product_id}_{i + 1:02}.jpg"
             full_url = f"{cabinet_prefix}/{shop_en}/{img_path}"
-            # 可以加入檢查檔案是否存在，這裡假設都存在
             urls.append(full_url)
         return urls
+
+    @classmethod
+    def from_json(cls, json_path: Path):
+        import json
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return cls(
+            shop_code=data["shop_code"],
+            product_id=data["product_id"],
+            image_amount=data.get("image_amount"),
+            description=data.get("description"),
+            features=data.get("features"),
+            highlights=data.get("highlights"),
+            product_info=data.get("product_info")
+        )
 
     def to_dict(self):
         return {
