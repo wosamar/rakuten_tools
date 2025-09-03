@@ -42,5 +42,5 @@ if __name__ == '__main__':
     category.fetch_titles()
     category.compute_frequency()
 
-    category.display_titles()
-    category.display_freq()
+    display_titles()
+    display_freq()

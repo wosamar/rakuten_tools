@@ -22,8 +22,8 @@ class EnvSettings(BaseSettings):
     json_dir: Path = BASE_DIR / "input" / "json"
     html_dir: Path = BASE_DIR / "output" / "html"
 
-    SERVICE_SECRET: str
-    LICENSE_KEY: str
+    SERVICE_SECRET: str = "your_secret"
+    LICENSE_KEY: str = "your_license_key"
 
     @computed_field
     @property
