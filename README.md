@@ -44,10 +44,6 @@ EXCEL→JSON→HTML→API（自動更新）
 ```
 project_root/
 │
-├─ config/                   # 設定檔
-│   ├─ config_excel.json
-│   ├─ config_json.json
-│   ├─ config_batch.json
 │
 ├─ input/                    # 輸入檔案
 │   ├─ excel/                # Excel 檔
@@ -75,7 +71,4 @@ project_root/
 │   └─ items/                # RMS 相關模組
 │       ├─ models.py
 │       └─ update_item_handler.py
-│
-├─ main.py                    # CLI 主程式
-└─ main.bat                   # Windows 點兩下啟動
 ```

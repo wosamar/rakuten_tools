@@ -7,7 +7,6 @@ from scripts.page_designs.enum import Template
 from scripts.page_designs.excel_parser import ProductDocExtractor
 from scripts.page_designs.html_generator import HTMLGenerator
 from scripts.page_designs.models import ProductDescriptionData
-from utils import get_auth_token
 
 env_settings = EnvSettings()
 
@@ -31,7 +30,7 @@ def run(shop_name: str,
     }
 
     output_dir = env_settings.html_dir / shop_name
-    item_handler = ItemHandler(auth_token=get_auth_token())
+    item_handler = ItemHandler(auth_token=env_settings.auth_token)
 
     # 讀 Json 建 HTML
     for json_name in json_files:

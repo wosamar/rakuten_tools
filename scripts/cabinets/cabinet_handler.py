@@ -6,9 +6,10 @@ import time
 import requests
 import xml.etree.ElementTree as ET
 
-import utils
+from env_settings import EnvSettings
 from models import ShopInfo, FileInfo
 
+env_settings = EnvSettings()
 
 class RakutenCabinet:
     def __init__(self, auth_token):
@@ -141,5 +142,5 @@ if __name__ == '__main__':
     twe-shinebeam-01
     """
 
-    cabinet = RakutenCabinet(utils.get_auth_token())
+    cabinet = RakutenCabinet(env_settings.auth_token)
     images = cabinet.run(sku_input)

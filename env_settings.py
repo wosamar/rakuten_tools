@@ -1,5 +1,7 @@
+import base64
 from pathlib import Path
 
+from pydantic import computed_field
 from pydantic.v1 import BaseSettings
 
 # 專案根目錄
@@ -7,9 +9,28 @@ BASE_DIR = Path(__file__).parent.resolve()
 
 
 class EnvSettings(BaseSettings):
+    DB_NAME: str = "RakutenRepo"
+
+    DB_USER: str = "root"
+    DB_PASSWORD: str = "root"
+
+    DB_HOST: str = "127.0.0.1"
+    DB_PORT: str = "3306"
+    USE_SQLITE: bool = False
+
     excel_dir: Path = BASE_DIR / "input" / "excel"
     json_dir: Path = BASE_DIR / "input" / "json"
     html_dir: Path = BASE_DIR / "output" / "html"
 
+    SERVICE_SECRET: str
+    LICENSE_KEY: str
+
+    @computed_field
+    @property
+    def auth_token(self) -> str:
+        text = f"{self.SERVICE_SECRET}:{self.LICENSE_KEY}"
+        return base64.b64encode(text.encode("utf-8")).decode("utf-8")
+
     class Config:
-        env_file = ".env"  # 從.env讀取環境變數
+        env_file = BASE_DIR / ".env"  # 從.env讀取環境變數
+        env_file_encoding = 'utf-8'

@@ -1,11 +1,14 @@
 import os
 import requests
-import utils
+
+from env_settings import EnvSettings
 from scripts.items.models import ProductImage, ProductData
+
+env_settings = EnvSettings()
 
 
 class RakutenImageFetcher:
-    def __init__(self, auth_token:str):
+    def __init__(self, auth_token: str):
         self.url = "https://api.rms.rakuten.co.jp/es/2.0/items/bulk-get"
         self.headers = {"Authorization": f"Bearer {auth_token}"}
 
@@ -92,8 +95,7 @@ if __name__ == '__main__':
     twe-shinebeam-01
     """
 
-    token = utils.get_auth_token()
-    fetcher = RakutenImageFetcher(token)
+    fetcher = RakutenImageFetcher(env_settings.auth_token)
     res = fetcher.run(raw, download=False)
     print(
         res["total_images"],
