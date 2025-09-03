@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List
 
 from env_settings import EnvSettings
@@ -14,15 +13,15 @@ env_settings = EnvSettings()
 
 
 def run(shop_name: str,
-        excel_name: str = None, product_names: List[str] = None,
+        excel_file: str = None, json_files: List[str] = None,
         update_item: bool = True, is_test: bool = False):
-    if not excel_name and not product_names:
+    if not excel_file and not json_files:
         raise TypeError("Either excel_path or product_paths should be provided")
 
     # 讀 excel 並存成 json
-    if excel_name:
-        extractor = ProductDocExtractor(shop_name, excel_path=str(env_settings.excel_dir / excel_name))
-        product_names = extractor.to_json_files(out_dir=str(env_settings.json_dir / shop_name))
+    if excel_file:
+        extractor = ProductDocExtractor(shop_name, excel_path=str(env_settings.excel_dir / excel_file))
+        json_files = extractor.to_json_files(out_dir=str(env_settings.json_dir / shop_name))
 
     # 設定各HTML template
     template_generators = {
@@ -35,8 +34,8 @@ def run(shop_name: str,
     item_handler = ItemHandler(auth_token=get_auth_token())
 
     # 讀 Json 建 HTML
-    for product_name in product_names:
-        product = ProductDescriptionData.from_json(env_settings.json_dir / shop_name / product_name)
+    for json_name in json_files:
+        product = ProductDescriptionData.from_json(env_settings.json_dir / shop_name / json_name)
         for template_type, generator in template_generators.items():
             file_name = f"{product.shop_code}-{product.product_id}-{template_type}"
             generator.generate_html(product.to_dict(), out_dir=str(output_dir), file_name=file_name)
@@ -60,7 +59,7 @@ def run(shop_name: str,
             product_data.sales_description = sales_html
 
             resp = item_handler.patch_item(product_data)
-            if resp != 204:
+            if resp.status_code != 204:
                 raise Exception(resp.status_code, resp.text)
 
         if is_test:
@@ -70,7 +69,7 @@ def run(shop_name: str,
 if __name__ == '__main__':
     shop_n = "tra-sonnac"
     excel_n = "tra-sonnac.xlsx"
-    product_ns = [
+    json_ns = [
         "tra-sonnac-01.json",
         "tra-sonnac-02.json",
         "tra-sonnac-03.json",
@@ -80,8 +79,8 @@ if __name__ == '__main__':
 
     run(
         shop_n,
-        excel_name=excel_n,
-        # product_names=product_ns,
-        update_item=False,
-        is_test=True
+        excel_file=excel_n,
+        # json_files=json_ns,
+        # update_item=False,
+        # is_test=True
     )
