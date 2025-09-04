@@ -1,14 +1,19 @@
-import pandas as pd
 import json
+
+import pandas as pd
 from pathlib import Path
+
+from database import Product
+from handlers.database import DBHandler
 
 
 class ProductDocExtractor:
-    def __init__(self, shop_name: str, excel_path: str):
+    def __init__(self, shop_id: int, excel_path: str):
         self.excel_path = Path(excel_path)
         self.xls = pd.ExcelFile(self.excel_path)
 
-        self.shop_name = shop_name
+        self.shop_id = shop_id
+        self.db_handler = DBHandler()
 
     def _parse_sheet(self, sheet: str) -> dict:
         df = pd.read_excel(self.excel_path, sheet_name=sheet, header=None)
@@ -25,19 +30,21 @@ class ProductDocExtractor:
                 image_amount = int(img_amount_val) if pd.notna(img_amount_val) else 0
 
             if "「商品詳細介紹」" in val and "圖片無文字" in val:
-                desc = df.iloc[i + 1, 2] if i + 1 < len(df) else None
-                description = str(desc).split("\n") if pd.notna(desc) else []
+                description = df.iloc[i + 1, 2] if i + 1 < len(df) else None
+                # description = str(desc).split("\n") if pd.notna(desc) else []
 
             if "「商品簡短介紹」" in val:
-                feat = df.iloc[i + 1, 2] if i + 1 < len(df) else None
-                features = str(feat).split("\n") if pd.notna(feat) else []
+                features = df.iloc[i + 1, 2] if i + 1 < len(df) else None
+                # features = str(feat).split("\n") if pd.notna(feat) else []
 
             if "「商品5大賣點」" in val:
+                highlights = ""
                 for j in range(1, 6):
                     if i + j < len(df):
                         v = df.iloc[i + j, 2]
                         if pd.notna(v):
-                            highlights.append(str(v))
+                            # highlights.append(str(v))
+                            highlights += f"{v}\n"
 
             if "「商品詳細資訊」" in val:
                 for k in range(i + 1, len(df)):
@@ -52,34 +59,33 @@ class ProductDocExtractor:
                             product_info[key] = value
 
         return {
-            "image_amount": image_amount,
+            # "image_amount": image_amount,
             "description": description if description else None,
-            "features": features if features else None,
-            "highlights": highlights,
-            "product_info": product_info,
+            "feature": features if features else None,
+            "highlight": highlights,
+            "info": json.dumps(product_info, ensure_ascii=False),
         }
 
     def extract(self) -> dict:
         sheets = [s for s in self.xls.sheet_names if "文案" in s]
         return {s: self._parse_sheet(s) for s in sheets}
 
-    def to_json_files(self, out_dir: str):
+    def process_excel_to_db(self):
         data = self.extract()
-        out_path = Path(out_dir)
-        out_path.mkdir(parents=True, exist_ok=True)
-        file_names = []
+        products = []
 
         for product_id, (sheet, content) in enumerate(data.items(), start=1):
             product_id = "{:02d}".format(product_id)
-            filename = f"{self.shop_name}-{product_id}.json"
-            file = out_path / filename
 
-            content["shop_code"] = self.shop_name
+            content["shop_id"] = self.shop_id
             content["product_id"] = product_id
-            with open(file, "w", encoding="utf-8") as f:
-                json.dump(content, f, ensure_ascii=False, indent=2)
 
-            file_names.append(filename)
-            print(f"已輸出：{file}")
+            product = self.db_handler.create_or_update(
+                Product(**content),
+                ["shop_id", "product_id"]
+            )
+            products.append(product)
+            if product:
+                print(f"已寫入：{vars(product)}")
 
-        return file_names
+        return products

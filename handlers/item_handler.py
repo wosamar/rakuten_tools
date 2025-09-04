@@ -1,12 +1,26 @@
+import json
 import os
 import requests
 
 from env_settings import EnvSettings
-from scripts.items.models import ProductImage, ProductData
+from models.models import ProductImage, ProductData
 
 env_settings = EnvSettings()
 
 
+class ItemHandler:
+    def __init__(self, auth_token: str):
+        self.endpoint_template = "https://api.rms.rakuten.co.jp/es/2.0/items/manage-numbers/{manageNumber}"
+        self.headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+
+    def patch_item(self, product: ProductData):
+        url = self.endpoint_template.format(manageNumber=product.manage_number)
+        data = product.to_patch_payload()
+        resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
+        return resp
 class RakutenImageFetcher:
     def __init__(self, auth_token: str):
         self.url = "https://api.rms.rakuten.co.jp/es/2.0/items/bulk-get"
@@ -70,7 +84,6 @@ class RakutenImageFetcher:
             "save_dir": save_dir,
             "products": products.values()
         }
-
 
 if __name__ == '__main__':
     raw = """

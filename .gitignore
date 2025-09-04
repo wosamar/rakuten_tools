@@ -1,6 +1,6 @@
 # for files
-input/
-output/
+templates/input/
+templates/output/
 
 # Alembic
 alembic/versions/*.pyc

@@ -1,5 +1,5 @@
 from env_settings import BASE_DIR
-from scripts.page_designs.html_generator import HTMLGenerator
+from handlers.html_generator import HTMLGenerator
 
 
 def test_mobile_html_generation():

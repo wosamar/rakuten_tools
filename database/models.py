@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -32,10 +32,10 @@ class Product(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(String(50), nullable=False)  # 商品流水號
-    description = Column(String(100), nullable=False)
-    feature = Column(String(100), nullable=False)
-    highlight = Column(String(100), nullable=False)
-    info = Column(String(100), nullable=False)
+    description = Column(Text, nullable=False)
+    feature = Column(Text, nullable=False)
+    highlight = Column(Text, nullable=False)
+    info = Column(Text, nullable=False)
 
     updated_time = Column(DateTime, server_default=func.now())
     created_time = Column(DateTime, server_default=func.now())
@@ -44,6 +44,10 @@ class Product(Base):
 
     shop = relationship("Shop", back_populates="products")
     images = relationship("Image", back_populates="product")
+
+    __table_args__ = (
+        UniqueConstraint('product_id', 'shop_id', name='uq_product_shop'),
+    )
 
 
 class Image(Base):

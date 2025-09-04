@@ -5,6 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from database import Base
 from env_settings import EnvSettings, BASE_DIR
 
 # this is the Alembic Config object, which provides
@@ -20,7 +21,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -42,6 +43,7 @@ else:
         f"{settings.DB_PORT}/{settings.DB_NAME}"
     )
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -59,7 +61,7 @@ def run_migrations_offline() -> None:
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        dialect_opts={"paramstyle": "named"}
     )
 
     with context.begin_transaction():
