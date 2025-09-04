@@ -49,6 +49,20 @@ class Product(Base):
         UniqueConstraint('product_id', 'shop_id', name='uq_product_shop'),
     )
 
+    @property
+    def manage_number(self):
+        """生成管理編號，格式為 '專案名-商店名-商品代號'"""
+        try:
+            # 確保 shop 和 project 關聯物件都已載入
+            if self.shop and self.shop.project:
+                project_name = self.shop.project.name
+                shop_name = self.shop.name
+                product_id = self.product_id
+                return f"{project_name}-{shop_name}-{product_id}"
+            return None
+        except Exception:
+            return None
+
 
 class Image(Base):
     __tablename__ = "images"
