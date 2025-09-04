@@ -21,7 +21,7 @@ class Shop(Base):
     display_name = Column(String(100), nullable=False)  # 中文名稱
     created_time = Column(DateTime, server_default=func.now())
 
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
 
     project = relationship("Project", back_populates="shops")
     products = relationship("Product", back_populates="shop")
@@ -44,6 +44,7 @@ class Product(Base):
 
     shop = relationship("Shop", back_populates="products")
     images = relationship("Image", back_populates="product")
+
 
 class Image(Base):
     __tablename__ = "images"

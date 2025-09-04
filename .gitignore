@@ -2,6 +2,13 @@
 input/
 output/
 
+# Alembic
+alembic/versions/*.pyc
+alembic.db
+
+# Database file created by SQLAlchemy
+*.sqlite
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

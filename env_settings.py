@@ -2,7 +2,7 @@ import base64
 from pathlib import Path
 
 from pydantic import computed_field
-from pydantic.v1 import BaseSettings
+from pydantic_settings import BaseSettings
 
 # 專案根目錄
 BASE_DIR = Path(__file__).parent.resolve()
