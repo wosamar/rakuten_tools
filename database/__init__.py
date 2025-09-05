@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database.base import Base
-from database.models import Project, Shop, Product
+from database.models import Project, Shop, Product, Image, Template, TemplateType
 
 from env_settings import EnvSettings, BASE_DIR
 

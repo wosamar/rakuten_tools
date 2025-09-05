@@ -8,6 +8,7 @@ from handlers.database import DBHandler
 
 env_settings = EnvSettings()
 
+
 # ----------------- 資料查詢函式 -----------------
 def _fetch_templates_data(db: DBHandler, template_name: str, template_type: str, all_types: list):
     query_conditions = {}
@@ -21,6 +22,7 @@ def _fetch_templates_data(db: DBHandler, template_name: str, template_type: str,
         return db.get_all(Template, **query_conditions)
     else:
         return db.get_all(Template)
+
 
 # ----------------- 三個 Tab 函式 -----------------
 def list_templates_tab(db: DBHandler, all_types: list):
@@ -47,7 +49,9 @@ def list_templates_tab(db: DBHandler, all_types: list):
     else:
         st.info("沒有找到符合條件的 Template。")
 
+
 def add_template_tab(db: DBHandler, all_types: list):
+    # TODO:名稱/檔名去重複
     st.header("新增 Template")
     with st.form("add_template_form"):
         name = st.text_input("名稱")
@@ -76,11 +80,12 @@ def add_template_tab(db: DBHandler, all_types: list):
                     new_template = Template(
                         name=name,
                         path=path,
-                        description=description,
+                        description=description if description else None,
                         template_type_id=type_id,
                     )
                     db.add(new_template)
                     st.success("新增成功！請重新查詢。")
+
 
 def preview_template_tab(db: DBHandler, all_types: list):
     st.header("Template 預覽")
@@ -100,6 +105,7 @@ def preview_template_tab(db: DBHandler, all_types: list):
     else:
         st.info("沒有可預覽的 Template。")
 
+
 # ----------------- 主頁 -----------------
 def templates_page():
     st.set_page_config(page_title="Templates", page_icon="📑", layout="wide")
@@ -116,6 +122,7 @@ def templates_page():
         add_template_tab(db, all_types)
     with tabs[2]:
         preview_template_tab(db, all_types)
+
 
 if __name__ == "__main__":
     templates_page()

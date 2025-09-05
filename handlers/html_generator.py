@@ -1,7 +1,9 @@
-from pathlib import Path
+from database import Product
 
 
 class HTMLGenerator:
+    base_cabinet_url: str = "https://image.rakuten.co.jp/giftoftw/cabinet/"
+
     def __init__(self, template_path: str):
         self.template_path = template_path
         self.template = self._load_template()
@@ -10,34 +12,38 @@ class HTMLGenerator:
         with open(self.template_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    def generate_html(self, product: dict, out_dir: str, file_name: str):
-        # ======= 將物件內容轉成 HTML =======
-        images_html = "\n".join([f'<img src="{url}" width="100%">' for url in product.get("images", [])])
-        desc_html = "\n".join([f"<p>{p}</p>" for p in product.get("description", [])])
-        features_html = "\n".join(
-            [f'<p><b>{f.get("title", "")}</b><br>{f.get("content", "")}</p>' for f in product.get("features", [])]
-        )
-        highlights_html = "<br><br>\n".join(
-            [f"{i + 1}. {text}" for i, text in enumerate(product.get("highlights", []))]
-        ) + "<br><br>"
-        product_info_html = "\n".join(
-            [
-                f'<tr><th width="30%" bgcolor="#EEE">{p["name"]}</th><td bgcolor="#fff">{p["value"].replace("\n", "<br>")}</td></tr>'
-                for p in product.get("product_info", [])]
-        )
+    def generate_html(self, product: Product) -> str:
+        """
+        接收 Product ORM 物件，回傳 HTML 字串
+        """
+        # ======= 轉換圖片 =======
+        images_html = "\n".join([
+            f'<img src="https://image.rakuten.co.jp/giftoftw/cabinet/{product.shop.name}/{img.file_name}" width="100%">'
+            for img in product.images
+        ])
 
-        # ======= 替換占位符 =======
+        # ======= 轉換描述 =======
+        # description 與 feature 假設存成 list 或以換行拆成多段
+        desc_html = "\n".join([f"<p>{p}</p>" for p in product.description.split("\n")])
+        features_html = "\n".join([f"<p><b>{k}</b><br>{v}</p>" for k, v in product.feature_dict.items()]) if hasattr(
+            product, "feature_dict") else f"<p>{product.feature}</p>"
+
+        # ======= 轉換 highlight =======
+        highlights_html = "<br><br>\n".join(
+            [f"{i + 1}. {h}" for i, h in enumerate(product.highlight.strip().split("\n"))]) + "<br><br>"
+
+        # ======= 轉換 info =======
+        info_html = "\n".join([
+            f'<tr><th width="30%" bgcolor="#EEE">{k}</th><td bgcolor="#fff">{v.replace("\n", "<br>")}</td></tr>'
+            for k, v in product.info_dict.items()
+        ])
+
+        # ======= 替換模板 =======
         html_final = self.template
         html_final = html_final.replace("{{IMAGES}}", images_html)
         html_final = html_final.replace("{{DESCRIPTION}}", desc_html)
         html_final = html_final.replace("{{FEATURES}}", features_html)
         html_final = html_final.replace("{{HIGHLIGHTS}}", highlights_html)
-        html_final = html_final.replace("{{PRODUCT_INFO}}", product_info_html)
+        html_final = html_final.replace("{{PRODUCT_INFO}}", info_html)
 
-        # ======= 輸出 HTML =======
-        out_path = Path(out_dir)
-        out_path.mkdir(parents=True, exist_ok=True)
-
-        with open(out_path / file_name, "w", encoding="utf-8") as f:
-            f.write(html_final)
-        print(f"HTML 已生成完成：{file_name}")
+        return html_final
