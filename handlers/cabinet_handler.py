@@ -7,7 +7,7 @@ import requests
 import xml.etree.ElementTree as ET
 
 from env_settings import EnvSettings
-from models import ShopInfo, FileInfo
+from models.cabinet import ShopInfo, FileInfo
 
 env_settings = EnvSettings()
 

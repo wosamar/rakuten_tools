@@ -21,6 +21,7 @@ class EnvSettings(BaseSettings):
     excel_dir: Path = BASE_DIR / "input" / "excel"  # 待刪除
     json_dir: Path = BASE_DIR / "input" / "json"  # 待刪除
     html_dir: Path = BASE_DIR / "output" / "html"  # 待刪除
+    output_dir: Path = BASE_DIR / "templates" / "output"
     html_tmp_dir: Path = BASE_DIR / "templates" / "html"
 
     SERVICE_SECRET: str = "your_secret"

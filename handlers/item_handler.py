@@ -1,9 +1,13 @@
+import csv
 import json
-import os
+import time
+from pathlib import Path
+from typing import List, Dict
+
 import requests
 
 from env_settings import EnvSettings
-from models.models import ProductImage, ProductData
+from models.item import ProductData
 
 env_settings = EnvSettings()
 
@@ -21,57 +25,63 @@ class ItemHandler:
         data = product.to_patch_payload()
         resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
         return resp
-class RakutenImageFetcher:
+
+
+class RakutenProductExporter:
     def __init__(self, auth_token: str):
         self.url = "https://api.rms.rakuten.co.jp/es/2.0/items/bulk-get"
         self.headers = {"Authorization": f"Bearer {auth_token}"}
 
-    def _parse_input(self, raw_text):
-        return [s.strip() for s in raw_text.splitlines() if s.strip()]
+    def _parse_input(self, raw_text: str) -> List[str]:
+        lines = list(set(raw_text.splitlines()))
+        return [s.strip() for s in lines if s.strip()]
 
-    def fetch_products(self, manage_numbers):
+    def fetch_products(self, manage_numbers: List[str]) -> Dict[str, "ProductData"]:
         res = requests.post(self.url, json={"manageNumbers": manage_numbers}, headers=self.headers)
         data = res.json()
+
+        if res.status_code != 200:
+            print(f"Status code: {res.status_code}")  # 印出回傳狀態碼
+            print(data)
+
         result = {}
         for item in data.get("results", []):
-            manage_no = item.get("manageNumber")
-            images = [
-                ProductImage(type=img["type"], location=img["location"], alt=img.get("alt", ""))
-                for img in item.get("images", [])
-            ]
-            tags = [str(tag) for tag in item.get("tags", [])]
-            product = ProductData(
-                manage_number=manage_no,
-                item_number=item.get("itemNumber"),
-                title=item.get("title"),
-                tagline=item.get("tagline", ""),
-                product_description=item.get("productDescription", {}),
-                sales_description=item.get("salesDescription", ""),
-                images=images,
-                genre_id=item.get("genreId", ""),
-                tags=tags
-            )
-            result[manage_no] = product
+            product = ProductData.from_api(item)
+            result[item.get("manageNumber")] = product
         return result
 
-    def download_images(self, products: dict, save_dir="images"):
-        os.makedirs(save_dir, exist_ok=True)
+    def download_images(self, products: Dict[str, "ProductData"], save_dir="images"):
+        Path(save_dir).mkdir(exist_ok=True)
         for manage_no, product in products.items():
             for idx, img in enumerate(product.images, start=1):
-                filename = os.path.join(save_dir, f"{manage_no}_{idx}.jpg")
-                url = "https://image.rakuten.co.jp/giftoftw/cabinet" + img.location
-                r = requests.get(url, stream=True)
-                if r.status_code == 200:
-                    with open(filename, "wb") as f:
-                        for chunk in r.iter_content(1024):
-                            f.write(chunk)
+                url = img.location
+                ext = url.split(".")[-1]
+                img_path = Path(save_dir) / f"{manage_no}_{idx}.{ext}"
+                try:
+                    r = requests.get(url)
+                    r.raise_for_status()
+                    img_path.write_bytes(r.content)
+                except Exception:
+                    continue
 
-    def run(self, raw_text, save_dir="images", download=True):
+    def export_csv(self, products: Dict[str, "ProductData"], fields: List[str], csv_file="products.csv"):
+        results = [{f: getattr(p, f, None) for f in fields} for p in products.values()]
+        csv_path = Path(csv_file)
+        csv_path.parent.mkdir(parents=True, exist_ok=True)  # 確保資料夾存在
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(results)
+        print(f"完成！資料存於 {csv_path}")
+
+    def run(self, raw_text: str, fields: List[str],
+            save_dir="images", download_images=False,
+            csv_file="products.csv"):
         manage_numbers = self._parse_input(raw_text)
         products = self.fetch_products(manage_numbers)
-
-        if download:
+        if download_images:
             self.download_images(products, save_dir)
+        self.export_csv(products, fields, csv_file)
 
         found = list(products.keys())
         not_found = [m for m in manage_numbers if m not in found]
@@ -85,37 +95,88 @@ class RakutenImageFetcher:
             "products": products.values()
         }
 
-if __name__ == '__main__':
-    raw = """
-    tra-hiq-06
-    tra-lifenergy-01
-    tra-lifenergy-04
-    tra-lifenergy-08
-    twe-dc-01
-    twe-feca-02
-    twe-feca-04
-    twe-feca-06
-    twe-feca-07
-    twe-feca-08
-    twe-feca-09
-    twe-feca-13
-    twe-feca-14
-    twe-feca-18
-    twe-feca-19
-    twe-feca-21
-    twe-mosa-01
-    twe-mosa-02
-    twe-shinebeam-01
-    """
 
-    fetcher = RakutenImageFetcher(env_settings.auth_token)
-    res = fetcher.run(raw, download=False)
-    print(
-        res["total_images"],
-        res["found"],
-        res["not_found"],
-        res["save_dir"],
-        # result["products"]
-    )
-    for p in res["products"]:
-        print(p.title)
+if __name__ == '__main__':
+    raw_dic = {k: "" for k in [5, 10, 15, 20]}
+    raw_dic[20] = """
+    tra-bull-01
+    tra-bull-02
+    tra-bull-04
+    tra-bull-07
+    tra-bull-06
+    tra-bull-08
+    tra-bull-08
+    tra-bull-08
+    tra-echobuckle-01
+    tra-echobuckle-01
+    tra-echobuckle-01
+    tra-echobuckle-01
+    tra-echobuckle-02
+    tra-echobuckle-02
+    tra-echobuckle-02
+    tra-echobuckle-03
+    tra-echobuckle-03
+    tra-echobuckle-03
+    tra-echobuckle-04
+    tra-lifenergy-01
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-02
+    tra-lifenergy-04
+    tra-lifenergy-05
+    tra-lifenergy-06
+    tra-lifenergy-08
+    """
+    raw_dic[15] = """tra-gemcrown-01
+    tra-gemcrown-02
+    tra-gemcrown-03
+    tra-gemcrown-04
+    tra-gemcrown-05
+    tra-hiq-06
+    tra-bull-06
+    tra-healthbody-01
+    tra-healthbody-04
+    tra-healthbody-05
+    tra-healthbody-05
+    tra-healthbody-05
+    tra-healthbody-06
+    tra-healthbody-07
+    tra-healthbody-07
+    tra-healthbody-07
+    tra-healthbody-07"""
+    raw_dic[10] = """
+    tra-washi-04
+    tra-washi-01
+    tra-alody-03
+    tra-tne-03
+    tra-tne-04
+    tra-tne-05"""
+    raw_dic[5] = """
+    tra-washi-02
+    tra-lotboard-01
+    tra-lotboard-02
+    tra-lotboard-03
+    tra-lotboard-04
+    tra-lotboard-05
+    tra-hiq-01
+    tra-hiq-02
+    tra-hiq-05
+    tra-unemac-01
+    tra-unemac-02
+    tra-unemac-03
+    tra-unemac-04
+    tra-unemac-05
+    """
+    exporter = RakutenProductExporter(env_settings.auth_token)
+    for p, raw in raw_dic.items():
+        exporter.run(
+            raw_text=raw,
+            fields=["manage_number", "title", "standard_price", "reference_price"],
+            csv_file=str(env_settings.output_dir / f"{p}-products.csv")
+        )
+        print("查詢中...")
+        time.sleep(5)
