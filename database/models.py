@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -63,6 +65,17 @@ class Product(Base):
         except Exception:
             return None
 
+    @property
+    def info_dict(self):
+        try:
+            return json.loads(self.info) if self.info else {}
+        except json.JSONDecodeError:
+            return {}
+
+    @info_dict.setter
+    def info_dict(self, value: dict):
+        self.info = json.dumps(value, ensure_ascii=False)
+
 
 class Image(Base):
     __tablename__ = "images"
@@ -83,10 +96,22 @@ class Template(Base):
     name = Column(String(50), unique=True, nullable=False)
     path = Column(String(100), nullable=False)
     description = Column(String(100), nullable=True)
-    template_type_id = Column(Integer, nullable=False)  # 1=main 2=sub 3=mobile
+    template_type_id = Column(Integer, ForeignKey("template_types.id"), nullable=False)  # 1=main 2=sub 3=mobile
 
     created_time = Column(DateTime, server_default=func.now())
     updated_time = Column(DateTime, server_default=func.now())
+    template_type = relationship("TemplateType", back_populates="templates")
+
+
+class TemplateType(Base):
+    __tablename__ = "template_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(String(100), nullable=True)
+
+    created_time = Column(DateTime, server_default=func.now())
+    templates = relationship("Template", back_populates="template_type")
 
 
 class Log(Base):
