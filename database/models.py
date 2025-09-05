@@ -82,7 +82,8 @@ class Template(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True, nullable=False)
     path = Column(String(100), nullable=False)
-    description = Column(String(100), nullable=False)
+    description = Column(String(100), nullable=True)
+    template_type_id = Column(Integer, nullable=False)  # 1=main 2=sub 3=mobile
 
     created_time = Column(DateTime, server_default=func.now())
     updated_time = Column(DateTime, server_default=func.now())

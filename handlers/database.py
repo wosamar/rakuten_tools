@@ -1,5 +1,3 @@
-from sqlalchemy import inspect
-
 from database import Session as DBSession
 from sqlalchemy.orm import Session
 

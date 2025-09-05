@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+
+from database.models import Template
 from handlers.database import DBHandler
 from database import Shop, Product, Project
 
@@ -18,6 +20,12 @@ def _fetch_products_data(db: DBHandler, selected_shop_name: str, all_shops: list
         return db.get_all(Product, **query_conditions)
     else:
         return db.get_all(Product)
+
+
+def _fetch_template_info(db: DBHandler, type_id: int):
+    query_conditions = {"template_type_id": type_id}
+
+    return db.get_all(Template, **query_conditions)
 
 
 def _generate_html_content(product_data, templates):
@@ -111,20 +119,23 @@ def tools_page():
             st.header("生成 HTML")
 
             template_col1, template_col2, template_col3 = st.columns(3)
+            main_templates = _fetch_template_info(db, 1)
+            sub_templates = _fetch_template_info(db, 2)
+            mobile_templates = _fetch_template_info(db, 3)
             with template_col1:
                 pc_description_template = st.selectbox(
                     "PC用商品説明文",
-                    options=['Template A', 'Template B', 'Template C']
+                    options=[t.name for t in main_templates]
                 )
             with template_col2:
                 pc_sales_template = st.selectbox(
                     "PC用販売説明文",
-                    options=['Template A', 'Template B', 'Template C']
+                    options=[t.name for t in sub_templates]
                 )
             with template_col3:
                 mobile_description_template = st.selectbox(
                     "スマートフォン用商品説明文",
-                    options=['Template A', 'Template B', 'Template C']
+                    options=[t.name for t in mobile_templates]
                 )
 
             generate_html_button = st.button("生成 HTML", type="primary")

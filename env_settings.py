@@ -18,9 +18,10 @@ class EnvSettings(BaseSettings):
     DB_PORT: str = "3306"
     USE_SQLITE: bool = False
 
-    excel_dir: Path = BASE_DIR / "input" / "excel"
-    json_dir: Path = BASE_DIR / "input" / "json"
-    html_dir: Path = BASE_DIR / "output" / "html"
+    excel_dir: Path = BASE_DIR / "input" / "excel"  # 待刪除
+    json_dir: Path = BASE_DIR / "input" / "json"  # 待刪除
+    html_dir: Path = BASE_DIR / "output" / "html"  # 待刪除
+    html_tmp_dir: Path = BASE_DIR / "templates" / "html"
 
     SERVICE_SECRET: str = "your_secret"
     LICENSE_KEY: str = "your_license_key"

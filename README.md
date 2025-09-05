@@ -12,34 +12,29 @@ SERVICE_SECRET=YOUR_SECRET
 LICENSE_KEY=YOUR_KEY
 ```
 
-## 二、功能列表
+資料庫更新方式:
+Alembic
+`alembic revision --autogenerate -m "你的版本說明"`
+`alembic upgrade head`
 
-### （一）下載產品圖片
+SQLite更新範例
 
-- Input：產品編號列表
-- Output：產品圖片列表
+```
+from alembic import op
+import sqlalchemy as sa
 
-### （二）取得產品名稱列表
+def upgrade() -> None:
+    # 使用 batch_alter_table 來安全地刪除欄位
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.drop_column('name')
 
-- Input：產品編號列表
-- Output：產品名稱列表
+def downgrade() -> None:
+    # 降級時，手動將欄位加回來
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('name', sa.VARCHAR(), nullable=True))
+```
 
-### （三）HTML 生成
-
-EXCEL→JSON→HTML→API（自動更新）
-
-1. EXCEL前處理
-    - 在A列任何一行填入「商品圖片總數」
-    - 在同一行右列填入圖片總數（如：5）
-
-   |    | A      | B   | C   |
-          |----|--------|-----|-----|
-   | 15 | ...    | ... | ... |
-   | 16 | 商品圖片總數 | 5   |     |
-
-2. 將 `商品資訊及文案.xlsx` 放入`input/excel/`）
-
-## 三、專案結構
+## 二、專案結構
 
 ```
 project_root/
