@@ -9,7 +9,7 @@ from env_settings import EnvSettings, BASE_DIR
 settings = EnvSettings()
 
 if settings.USE_SQLITE:
-    engine = create_engine(f"sqlite+pysqlite:///{BASE_DIR / settings.DB_NAME}.sqlite", echo=True, future=True)
+    engine = create_engine(f"sqlite+pysqlite:///{BASE_DIR / settings.DB_NAME}.sqlite", echo=False, future=True)
 else:
     engine = create_engine(
         f"mariadb+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}//{settings.DB_NAME}",

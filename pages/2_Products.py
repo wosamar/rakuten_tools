@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 from database import Shop, Product
-from handlers.database import DBHandler
+from handlers.database import DBHandler, ProductHandler
+from handlers.excel_parser import ProductExcelParser
 
 db = DBHandler()  # 全局共用 DBHandler
+
 
 # ----------------- 查詢函式 -----------------
 def fetch_products(selected_shop_name: str, all_shops: list):
@@ -13,6 +15,7 @@ def fetch_products(selected_shop_name: str, all_shops: list):
         if shop_id:
             query_conditions['shop_id'] = shop_id
     return db.get_all(Product, **query_conditions) if query_conditions else db.get_all(Product)
+
 
 # ----------------- Tab 函式 -----------------
 def product_list_tab():
@@ -36,11 +39,13 @@ def product_list_tab():
             '商品描述': p.description,
             '商品簡述': p.feature,
             '商品特色': p.highlight,
-            '商品資訊': p.info
+            '商品資訊': p.info,
+            '商品圖片': ", ".join([img.file_name for img in p.images])
         } for p in results])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
     else:
         st.info("沒有找到符合條件的商品。")
+
 
 def add_product_tab():
     st.header("📤 新增商品")
@@ -60,20 +65,23 @@ def add_product_tab():
                 if not shop:
                     st.error("商店不存在")
                 else:
-                    df = pd.read_excel(excel_file)
-                    db_count = 0
-                    for _, row in df.iterrows():
-                        new_product = Product(
-                            manage_number=row.get("商品代號"),
-                            description=row.get("商品描述", ""),
-                            feature=row.get("商品簡述", ""),
-                            highlight=row.get("商品特色", ""),
-                            info=row.get("商品資訊", ""),
-                            shop_id=shop.id
-                        )
-                        db.add(new_product)
-                        db_count += 1
-                    st.success(f"成功新增 {db_count} 筆商品到 {shop.name}")
+                    parser = ProductExcelParser(shop_id=shop.id, excel_bytes=excel_file.read())
+                    products_data = parser.parse_all_sheets()
+
+                    product_handler = ProductHandler(db)
+                    saved_count = 0
+                    for product in products_data:
+                        saved_product = None
+                        if p := db.get(Product, **{'shop_id': shop.id, 'sequence': product['sequence']}):
+                            product['id'] = p.id
+                            saved_product = product_handler.update_product_with_images(product)
+                        else:
+                            saved_product = product_handler.create_product_with_images(product)
+
+                        saved_count += 1 if saved_product else 0
+
+                    st.success(f"成功新增 {saved_count} 筆商品到 {shop.name}")
+
 
 def edit_product_tab():
     st.header("✏️ 編輯商品")
@@ -100,7 +108,7 @@ def edit_product_tab():
             st.text("商品資訊")
             info_dict = product.info_dict if isinstance(product.info_dict, dict) else {}
             info_df = pd.DataFrame(info_dict.items(), columns=["項目", "內容"])
-            edited_df = st.data_editor(info_df, use_container_width=True, height=300)
+            edited_df = st.data_editor(info_df, width="stretch", height=300)
             edited_info = dict(zip(edited_df["項目"], edited_df["內容"]))
 
             if st.button("💾 儲存修改"):
@@ -124,6 +132,7 @@ def products_page():
         add_product_tab()
     with tabs[2]:
         edit_product_tab()
+
 
 if __name__ == "__main__":
     products_page()

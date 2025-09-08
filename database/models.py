@@ -33,7 +33,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(String(50), nullable=False)  # 商品流水號
+    sequence = Column(String(50), nullable=False)  # 商品流水號
     description = Column(Text, nullable=False)
     feature = Column(Text, nullable=False)
     highlight = Column(Text, nullable=False)
@@ -48,7 +48,7 @@ class Product(Base):
     images = relationship("Image", back_populates="product")
 
     __table_args__ = (
-        UniqueConstraint('product_id', 'shop_id', name='uq_product_shop'),
+        UniqueConstraint('sequence', 'shop_id', name='uq_product_shop'),
     )
 
     @property
@@ -59,8 +59,8 @@ class Product(Base):
             if self.shop and self.shop.project:
                 project_name = self.shop.project.name
                 shop_name = self.shop.name
-                product_id = self.product_id
-                return f"{project_name}-{shop_name}-{product_id}"
+                sequence = self.sequence
+                return f"{project_name}-{shop_name}-{sequence}"
             return None
         except Exception:
             return None
@@ -88,6 +88,9 @@ class Image(Base):
 
     product = relationship("Product", back_populates="images")
 
+    __table_args__ = (
+        UniqueConstraint('file_name', 'product_id',  name='uq_image_product'),
+    )
 
 class Template(Base):
     __tablename__ = "templates"

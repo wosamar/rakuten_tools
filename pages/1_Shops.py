@@ -46,7 +46,7 @@ def list_shops_tab(db: DBHandler, all_projects: list):
     if results:
         df = pd.DataFrame([{'id': s.id, '專案名': s.project.name if s.project else "無專案",
                             '商店代號': s.name, '商店名': s.display_name} for s in results])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width='stretch', hide_index=True)
     else:
         st.info("沒有找到符合條件的商店。")
 

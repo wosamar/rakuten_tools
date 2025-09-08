@@ -1,4 +1,4 @@
-from database import Session as DBSession
+from database import Session as DBSession, Product, Image
 from sqlalchemy.orm import Session
 
 
@@ -54,32 +54,73 @@ class DBHandler:
             self._session.rollback()
             print(f"Error deleting instance: {e}")
 
-    def create_or_update(self, instance, unique_keys: list):
-        """
-        根據指定的唯一鍵判斷資料是否存在，若存在則更新，否則新增。
-
-        參數:
-        - instance: 要新增或更新的模型實例。
-        - unique_keys: 用於判斷唯一性的欄位名稱列表，例如 ['shop_id', 'product_id']。
-        """
-        try:
-            # 建立查詢條件字典
-            filter_kwargs = {key: getattr(instance, key) for key in unique_keys}
-
-            # 查詢現有實例
-            existing_instance = self.get(type(instance), **filter_kwargs)
-
-            if existing_instance:
-                # 如果存在，就更新其屬性
-                return self.update(existing_instance, **filter_kwargs)
-            else:
-                # 如果不存在，就新增
-                return self.add(instance)
-        except Exception as e:
-            print(f"Error in create_or_update: {e}")
-            self._session.rollback()
-            return None
+    def commit(self):
+        self._session.commit()
 
     def close(self):
         """關閉 Session"""
         self._session.close()
+
+
+class ProductHandler:
+    def __init__(self, db_handler):
+        self.db = db_handler
+
+    def create_product_with_images(self, data: dict):
+        """新增一個新商品及其關聯的所有圖片。"""
+        # 建立商品實例
+        new_product = Product(sequence=data['sequence'])
+
+        # 將圖片實例添加到商品的 images 列表
+        for img_data in data['images']:
+            new_product.images.append(Image(file_name=img_data['file_name']))
+
+        # 使用 add 方法將商品及其所有關聯的圖片一併新增到資料庫
+        return self.db.add(new_product)
+
+    def update_product_with_images(self, data: dict):
+        """更新一個既有商品及其關聯的圖片。
+        data 應包含商品所有需要更新的屬性，以及圖片列表。
+        """
+        # 1. 取得現有的商品實例
+        existing_product = self.db.get(Product, **{"id": data.get('id')})
+        if not existing_product:
+            raise ValueError(f"商品 ID {data.get('id')} 不存在。")
+
+        # 2. 更新商品屬性 (your existing logic)
+        allowed_fields = ['sequence', 'description', 'feature', 'highlight', 'info']
+        update_fields = {key: data.get(key) for key in allowed_fields if key in data}
+        if update_fields:
+            self.db.update(existing_product, **update_fields)
+
+        # 3. 處理圖片：取得傳入資料中所有圖片的 ID
+        incoming_images_data = data.get('images', [])
+        incoming_image_ids = {img_data.get('id') for img_data in incoming_images_data if img_data.get('id')}
+
+        # 4. 處理刪除：建立一個副本進行迭代，避免在迴圈中修改列表
+        for existing_img in list(existing_product.images):
+            if existing_img.id not in incoming_image_ids:
+                # Instead of letting SQLAlchemy handle the delete,
+                # you explicitly set the product_id to NULL.
+                # In your case, you must DELETE it directly instead.
+                self.db.delete(existing_img)
+
+        # 5. 處理新增與更新：建立一個現有圖片的字典以加速查找
+        existing_images_map = {img.id: img for img in existing_product.images}
+
+        for img_data in incoming_images_data:
+            img_id = img_data.get('id')
+            if img_id:
+                # 更新現有圖片
+                if img_id in existing_images_map:
+                    img_to_update = existing_images_map[img_id]
+                    self.db.update(img_to_update, file_name=img_data['file_name'])
+            else:
+                # 新增圖片
+                new_image = Image(file_name=img_data['file_name'])
+                # Manually set the product_id to ensure it's not NULL
+                new_image.product_id = existing_product.id
+                self.db.add(new_image)  # Add new image to the session
+
+        self.db.commit()
+        return existing_product

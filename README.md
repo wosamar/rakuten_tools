@@ -25,7 +25,7 @@ import sqlalchemy as sa
 
 def upgrade() -> None:
     # 使用 batch_alter_table 來安全地刪除欄位
-    with op.batch_alter_table('users', schema=None) as batch_op:
+    with op.batch_alter_table('products', schema=None) as batch_op:
         batch_op.drop_column('name')
 
 def downgrade() -> None:
