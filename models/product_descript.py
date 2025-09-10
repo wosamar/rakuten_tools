@@ -1,29 +1,29 @@
 from pathlib import Path
 
-cabinet_prefix = "https://image.rakuten.co.jp/giftoftw/cabinet"
+from env_settings import EnvSettings
+
+env_settings = EnvSettings()
+cabinet_prefix = f"https://image.rakuten.co.jp/{env_settings.TENPO_NAME}/cabinet"
 
 
 class ProductDescriptionData:
-    def __init__(self, shop_code, product_id, image_amount,
-                 description, features, highlights, product_info):
+    def __init__(self, shop_code: str, image_infos: list,
+                 description: str, feature: str, highlight: str, product_info: dict):
         self.shop_code = shop_code
-        self.product_id = product_id
-
-        self.images = self._build_image_urls(shop_code, product_id, image_amount)
-        self.description = [p.strip() for p in description if p.strip()]
-        self.features = [{"title": "", "content": f.strip()} for f in features if f.strip()]
-        self.highlights = [h.strip() for h in highlights if h.strip()]
-        self.product_info = [{"name": k, "value": v} for k, v in product_info.items()]
+        self.image_infos = self._build_image_infos(shop_code, image_infos)
+        self.description = [p.strip() for p in description.splitlines() if p.strip()]
+        self.feature = [f.strip() for f in feature.splitlines() if f.strip()]
+        self.highlight = [h.strip() for h in highlight.splitlines() if h.strip()]
+        self.product_info = product_info
 
     @staticmethod
-    def _build_image_urls(shop_code: str, product_id: str, image_amount):
-        urls = []
-        shop_en = shop_code.split("-")[-1]
-        for i in range(image_amount):
-            img_path = f"{shop_code}-{product_id}_{i + 1:02}.jpg"
-            full_url = f"{cabinet_prefix}/{shop_en}/{img_path}"
-            urls.append(full_url)
-        return urls
+    def _build_image_infos(shop_code: str, image_infos: list):
+        result = []
+        shop_name = shop_code.split("-")[-1]
+        for image_info in image_infos:
+            full_url = f"{cabinet_prefix}/{shop_name}/{image_info.get('url')}"
+            result.append({"url": full_url, "description": image_info.get("description")})
+        return result
 
     @classmethod
     def from_json(cls, json_path: Path):
@@ -32,19 +32,20 @@ class ProductDescriptionData:
             data = json.load(f)
         return cls(
             shop_code=data["shop_code"],
-            product_id=data["product_id"],
-            image_amount=data.get("image_amount"),
+            image_infos=data["images"],
+            image_descriptions=data["image_descriptions"],
             description=data.get("description"),
-            features=data.get("features"),
-            highlights=data.get("highlights"),
+            feature=data.get("features"),
+            highlight=data.get("highlights"),
             product_info=data.get("product_info")
         )
 
     def to_dict(self):
         return {
-            "images": self.images,
+            "shop_code": self.shop_code,
+            "image_infos": self.image_infos,
             "description": self.description,
-            "features": self.features,
-            "highlights": self.highlights,
+            "features": self.feature,
+            "highlights": self.highlight,
             "product_info": self.product_info
         }

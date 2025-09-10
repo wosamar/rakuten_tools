@@ -9,6 +9,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 
 
 class EnvSettings(BaseSettings):
+    # Database
     DB_NAME: str = "RakutenRepo"
 
     DB_USER: str = "root"
@@ -18,14 +19,14 @@ class EnvSettings(BaseSettings):
     DB_PORT: str = "3306"
     USE_SQLITE: bool = False
 
-    excel_dir: Path = BASE_DIR / "input" / "excel"  # 待刪除
-    json_dir: Path = BASE_DIR / "input" / "json"  # 待刪除
-    html_dir: Path = BASE_DIR / "output" / "html"  # 待刪除
+    # Files
     output_dir: Path = BASE_DIR / "templates" / "output"
     html_tmp_dir: Path = BASE_DIR / "templates" / "html"
 
+    # Rakuten RMS
     SERVICE_SECRET: str = "your_secret"
     LICENSE_KEY: str = "your_license_key"
+    TENPO_NAME: str = "giftoftw"
 
     @computed_field
     @property

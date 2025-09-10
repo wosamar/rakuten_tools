@@ -1,18 +1,11 @@
-import json
 import re
 from io import BytesIO
 
 import pandas as pd
 
-from database import Product, Image, Shop
-from handlers.database import DBHandler
-
 
 class ProductExcelParser:
-    def __init__(self, shop_id: int, excel_bytes: bytes):
-        self.db = DBHandler()
-
-        self.shop = self.db.get(Shop, **{"id": shop_id})
+    def __init__(self, excel_bytes: bytes):
         self.xls = self.xls = pd.ExcelFile(BytesIO(excel_bytes))
         self.known_headers = [
             "商品圖片名稱",
@@ -27,7 +20,7 @@ class ProductExcelParser:
         result = []
         for i in range(start_idx + 1, len(df)):
             val = df.iloc[i, 0]
-            if pd.isna(val) or str(val).strip() in self.known_headers:
+            if any(header in str(val).strip() for header in self.known_headers):
                 break
             cell = df.iloc[i, col]
             if pd.notna(cell):
@@ -42,26 +35,33 @@ class ProductExcelParser:
 
     def parse_sheet(self, sheet_name: str) -> dict:
         df = pd.read_excel(self.xls, sheet_name=sheet_name, header=None)
-        description, features, highlights, images = None, None, "", []
-        product_info = {}
+        description, feature, highlight, product_info, image_infos, image_descriptions = None, None, "", {}, [], []
 
+        image_infos = []
         for i, val in enumerate(df.iloc[:, 0]):
             val = str(val).strip()
-            if val == "商品圖片名稱":
-                images = self.collect_block(df, i, col=0)
-            elif "「商品詳細介紹」<圖片含文字>" in val:
-                description = "\n".join(self.collect_block(df, i))
+            if "「商品詳細介紹」<圖片含文字>" in val:
+                for k in range(i + 1, len(df)):
+                    a_val = df.iloc[k, 0]
+                    c_val = df.iloc[k, 2]
+                    if any(header in str(a_val).strip() for header in self.known_headers) or not a_val.lower().endswith(
+                            (".jpg", ".jpeg", ".png")):
+                        break
+                    key = str(a_val).split("\n")[0].strip()
+                    value = None if pd.isna(c_val) else str(c_val).strip()
+                    image_infos.append(dict(url=key, description=value))
+
             elif "「商品詳細介紹」<圖片無文字>" in val:
                 description = "\n".join(self.collect_block(df, i))
             elif "「商品簡短介紹」" in val:
-                features = "\n".join(self.collect_block(df, i))
+                feature = "\n".join(self.collect_block(df, i))
             elif "「商品5大賣點」" in val:
-                highlights = "\n".join(self.collect_block(df, i))
+                highlight = "\n".join(self.collect_block(df, i))
             elif "「商品詳細資訊」" in val:
                 for k in range(i + 1, len(df)):
                     a_val = df.iloc[k, 0]
                     c_val = df.iloc[k, 2]
-                    if str(a_val).strip() in self.known_headers:
+                    if any(header in str(a_val).strip() for header in self.known_headers):
                         break
                     if not pd.isna(c_val):
                         key = str(a_val).split("\n")[0].strip()
@@ -70,17 +70,14 @@ class ProductExcelParser:
                             product_info[key] += f"\n{value}"
                         else:
                             product_info[key] = value
-
-        p = Product(
-            shop_id=self.shop.id,
-            sequence=self.sheet_to_sequence(sheet_name),
-            description=description or "",
-            feature=features or "",
-            highlight=highlights or "",
-            info=json.dumps(product_info, ensure_ascii=False)
-        ).__dict__
-        p["images"] = [Image(file_name=n).__dict__ for n in images]
-        return p
+        return {
+            "sequence": self.sheet_to_sequence(sheet_name),
+            "image_infos": image_infos,
+            "description": description,
+            "feature": feature,
+            "highlight": highlight,
+            "product_info": product_info
+        }
 
     def parse_all_sheets(self) -> list[dict]:
         products = []
