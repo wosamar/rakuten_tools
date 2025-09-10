@@ -9,8 +9,8 @@ class ProductImage(BaseModel):
 
 
 class ProductDescription(BaseModel):
-    pc: Optional[str]
-    sp: Optional[str]
+    pc: Optional[str]  # PC用商品説明文(pc_main)
+    sp: Optional[str]  # スマートフォン用商品説明文(mobile)
 
 
 class ProductData(BaseModel):
@@ -19,7 +19,7 @@ class ProductData(BaseModel):
     title: Optional[str] = None
     tagline: Optional[str] = None
     product_description: Optional[ProductDescription] = None
-    sales_description: Optional[str] = None
+    sales_description: Optional[str] = None  # PC用販売説明文(pc_sub)
     images: List[ProductImage] = Field(default_factory=list)
     genre_id: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
