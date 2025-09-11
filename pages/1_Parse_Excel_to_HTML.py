@@ -46,15 +46,45 @@ def show_htmls(store_id: str, product_datas: list):
             htmls = generate_htmls(ProductDescriptionData(**parse_data))
 
             for label, content in htmls.items():
-                with st.expander(html_display_names.get(label), expanded=False):
+                html_display_name = html_display_names.get(label)
+                with st.expander(html_display_name, expanded=False):
                     st.code(content, language="html")
-                    # st.markdown(content, unsafe_allow_html=True)
+
+                with st.expander(f"{html_display_name}（預覽）", expanded=False):
+                    st.markdown(content, unsafe_allow_html=True)
 
             st.success(f"商品 {manage_number} 的 HTML 已成功生成！")
 
         p_html_dict.update({manage_number: htmls})
 
     return p_html_dict
+
+
+def update_item_and_show_result(item_handler, manage_number, htmls):
+    product_data = ProductData(
+        manage_number=manage_number,
+        product_description=ProductDescription(
+            pc=htmls.get("pc_main"),
+            sp=htmls.get("mobile"),
+        ),
+        sales_description=htmls.get("pc_sub"),
+    )
+    try:
+        item_handler.patch_item(product_data)
+    except Exception as e:
+        st.error(f"商品 {manage_number} 更新失敗，錯誤訊息：{e}")
+    else:
+        st.success(f"商品 {manage_number} 已成功更新！")
+        if hasattr(env_settings, "TENPO_NAME"):
+            pc_preview_url = f"https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/"
+            mobile_preview_url = f"https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/"
+            st.markdown(f"**預覽連結：**")
+            st.markdown(
+                f"- [PC 預覽]({pc_preview_url})"
+            )
+            st.markdown(
+                f"- [手機預覽]({mobile_preview_url})"
+            )
 
 
 def show_page():
@@ -73,7 +103,7 @@ def show_page():
 
     # --- 功能按鈕區塊 ---
     if 'p_html_dict' not in st.session_state:
-        st.session_state.p_html_dict = None
+        st.session_state.p_html_dict = {}
 
     if st.button("生成 HTML"):
         st.write("---")
@@ -97,26 +127,40 @@ def show_page():
     # --- 後台更新按鈕區塊 ---
     st.write("---")
     st.subheader("更新至後台")
-    item_handler = ItemHandler(env_settings.auth_token)
-    if st.button("將 HTML 直接更新至後台"):
-        if not st.session_state.p_html_dict:
-            st.warning("請先上傳 Excel 檔案，並生成 HTML")
-        else:
-            for manage_number, htmls in st.session_state.p_html_dict.items():
-                product_data = ProductData(
-                    manage_number=manage_number,
-                    product_description=ProductDescription(
-                        pc=htmls.get("pc_main"),
-                        sp=htmls.get("mobile"),
-                    ),
-                    sales_description=htmls.get("pc_sub"),
-                )
-                item_handler.patch_item(product_data)
+    if not st.session_state.p_html_dict:
+        st.warning("請先上傳 Excel 檔案，並生成 HTML")
+    else:
+        item_handler = ItemHandler(env_settings.auth_token)
+        manage_numbers = list(st.session_state.p_html_dict.keys())
 
-                st.success(f"商品 {manage_number} 已成功更新！")
-                st.markdown(f"**預覽連結：**")
-                st.markdown(f"- [PC 預覽](https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/)")
-                st.markdown(f"- [行動版預覽](https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/?force-site=ipn)")
+        # 批次更新按鈕
+        # 創建兩個欄位，一個空的，另一個放按鈕，實現右對齊
+        cols = st.columns([4, 1])
+        with cols[-1]:
+            btn = st.button("全部更新")
+        with cols[0]:
+            if btn:
+                with st.spinner('正在更新所有商品...'):
+                    for manage_number in manage_numbers:
+                        update_item_and_show_result(
+                            item_handler, manage_number,
+                            st.session_state.p_html_dict[manage_number]
+                        )
+        st.markdown("---")
+        st.subheader("更新至後台（單獨）")
+        # 個別更新按鈕
+        for i, manage_number in enumerate(manage_numbers):
+            # 每個按鈕獨佔一行並右對齊
+            cols = st.columns([4, 1])
+            with cols[-1]:
+                btn = st.button(f"更新 {manage_number}")
+            with cols[0]:
+                if btn:
+                    with st.spinner(f'正在更新 {manage_number}...'):
+                        update_item_and_show_result(
+                            item_handler, manage_number,
+                            st.session_state.p_html_dict[manage_number]
+                        )
 
     st.markdown("""
     <style>

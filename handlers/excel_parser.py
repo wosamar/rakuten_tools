@@ -44,8 +44,9 @@ class ProductExcelParser:
                 for k in range(i + 1, len(df)):
                     a_val = df.iloc[k, 0]
                     c_val = df.iloc[k, 2]
-                    if any(header in str(a_val).strip() for header in self.known_headers) or not a_val.lower().endswith(
-                            (".jpg", ".jpeg", ".png")):
+                    if (any(header in str(a_val).strip() for header in self.known_headers) or
+                            pd.isna(a_val) or
+                            not a_val.lower().endswith((".jpg", ".jpeg", ".png"))):
                         break
                     key = str(a_val).split("\n")[0].strip()
                     value = None if pd.isna(c_val) else str(c_val).strip()

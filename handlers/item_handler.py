@@ -24,6 +24,10 @@ class ItemHandler:
         url = self.endpoint_template.format(manageNumber=product.manage_number)
         data = product.to_patch_payload()
         resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
+
+        if resp.status_code != 204:
+            raise Exception("\n".join([error.get("message") for error in resp.json().get("errors")]))
+
         return resp
 
 

@@ -1,4 +1,3 @@
-from database import Product
 from models.product_descript import ProductDescriptionData
 
 
@@ -20,9 +19,10 @@ class HTMLGenerator:
         # ======= 轉換圖片 =======
         htmls = []
         for image_info in product.image_infos:
+            if img_desc := image_info.get("description"):
+                for desc in img_desc.splitlines():
+                    htmls.append(f'<p>{desc}</p>')
             htmls.append(f'<img src="{image_info["url"]}" width="100%">')
-            if image_info.get("description"):
-                htmls.append(f'<p>{image_info["description"]}</p>')
 
         images_html = "\n".join(htmls)
 

@@ -10,6 +10,7 @@ Requirements:
 ```
 SERVICE_SECRET=YOUR_SECRET
 LICENSE_KEY=YOUR_KEY
+TENPO_NAME=TEMPO_NAME_IN_RAKUTEN
 ```
 
 資料庫更新方式:
@@ -30,7 +31,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # 降級時，手動將欄位加回來
-    with op.batch_alter_table('users', schema=None) as batch_op:
+    with op.batch_alter_table('products', schema=None) as batch_op:
         batch_op.add_column(sa.Column('name', sa.VARCHAR(), nullable=True))
 ```
 
@@ -39,8 +40,21 @@ def downgrade() -> None:
 ```
 project_root/
 │
-│
-├─ input/                    # 輸入檔案
+├─ handlers/                  
+│   ├─ 
+│   ├─ images              # 批量下載的商品圖片
+│   └─ product_info       
+├─ models/                 
+│   ├─ html/                 # 生成的 HTML
+│   │   ├─ shop1/
+│   │   │   └─ shop1-01-pc.html
+│   │   └─ shop2/
+│   ├─ images/               # 批量下載的商品圖片
+│   │   └─ 2025-09-01_1500/
+│   └─ product_info/         # 批量抓取的商品資訊 JSON/CSV
+│       └─ 2025-09-01_1500.json      
+├─ pages/     
+├─ templates/                    # 輸入檔案
 │   ├─ excel/                # Excel 檔
 │   │   └─ shop1.xlsx
 │   ├─ json/                 # JSON 檔
