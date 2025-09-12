@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 class EnvSettings(BaseSettings):
     # Files
     output_dir: Path = BASE_DIR / "templates" / "output"
-    html_tmp_dir: Path = BASE_DIR / "templates" / "html"
+    html_tmp_dir: Path = BASE_DIR / "templates" / "html_tmp"
 
     # Rakuten RMS
     SERVICE_SECRET: str = "your_secret"

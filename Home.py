@@ -1,13 +1,13 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="後台管理系統（Beta）",
+    page_title="EC工具箱（Beta）",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-st.title("🚀 後台管理系統（Beta）")
+st.title("🚀 EC工具箱（Beta）")
 
 st.warning("⚠️ **本系統為測試版本，僅供內部使用。** 功能仍在開發中，可能會存在不穩定或未完成之處。")
 

@@ -18,6 +18,11 @@ html_display_names = {
 }
 
 
+def clear_p_html_dict():
+    if "p_html_dict" in st.session_state:
+        st.session_state.p_html_dict = {}
+
+
 def generate_htmls(product):
     pc_main_gen = HTMLGenerator(str(env_settings.html_tmp_dir / "pc-main.html"))
     pc_sub_gen = HTMLGenerator(str(env_settings.html_tmp_dir / "pc-sub.html"))
@@ -77,7 +82,7 @@ def update_item_and_show_result(item_handler, manage_number, htmls):
         st.success(f"商品 {manage_number} 已成功更新！")
         if hasattr(env_settings, "TENPO_NAME"):
             pc_preview_url = f"https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/"
-            mobile_preview_url = f"https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/"
+            mobile_preview_url = f"https://soko.rms.rakuten.co.jp/{env_settings.TENPO_NAME}/{manage_number}/?force-site=ipn"
             st.markdown(f"**預覽連結：**")
             st.markdown(
                 f"- [PC 預覽]({pc_preview_url})"
@@ -98,16 +103,20 @@ def show_page():
     # --- 輸入區塊 ---
     st.subheader("輸入設定")
 
-    store_id = st.text_input("商店代號", help="請輸入商店代碼，例如：tra-demo")
+    store_id = st.text_input("商店代號", help="請輸入商店代碼，例如：tra-demo", on_change=clear_p_html_dict)
     uploaded_file = st.file_uploader("請上傳 Excel 檔案", type=["xlsx", "xls"], help="僅支援 .xlsx 或 .xls 格式")
 
     # --- 功能按鈕區塊 ---
     if 'p_html_dict' not in st.session_state:
         st.session_state.p_html_dict = {}
 
+    if 'items_checked' not in st.session_state:
+        st.session_state.items_checked = {}
+
     if st.button("生成 HTML"):
         st.write("---")
-        # 檢查輸入是否齊全
+
+        st.session_state.items_checked = {}  # 重置已勾選項目
         if not store_id:
             st.error("請先輸入商店代號！")
         elif not uploaded_file:
@@ -127,40 +136,75 @@ def show_page():
     # --- 後台更新按鈕區塊 ---
     st.write("---")
     st.subheader("更新至後台")
+
     if not st.session_state.p_html_dict:
         st.warning("請先上傳 Excel 檔案，並生成 HTML")
     else:
         item_handler = ItemHandler(env_settings.auth_token)
         manage_numbers = list(st.session_state.p_html_dict.keys())
 
-        # 批次更新按鈕
-        # 創建兩個欄位，一個空的，另一個放按鈕，實現右對齊
-        cols = st.columns([4, 1])
-        with cols[-1]:
-            btn = st.button("全部更新")
-        with cols[0]:
+        @st.dialog("確認更新", width="small")
+        def confirm_update_dialog(items_to_update):
+            st.warning(f"您確定要更新所選的 {len(items_to_update)} 個商品嗎？此操作無法復原。")
+
+            confirm_cols = st.columns([1, 1, 1, 1])
+            with confirm_cols[1]:
+                btn = st.button("確定更新", type="primary")
             if btn:
-                with st.spinner('正在更新所有商品...'):
-                    for manage_number in manage_numbers:
-                        update_item_and_show_result(
-                            item_handler, manage_number,
-                            st.session_state.p_html_dict[manage_number]
-                        )
+                st.session_state.items_to_update = items_to_update
+                st.rerun()
+
+            with confirm_cols[2]:
+                if st.button("取消", type="secondary"):
+                    st.rerun()  # 點擊取消後，重新執行腳本以關閉視窗
+
+            # 初始化 session_state 來追蹤勾選狀態
+            if "items_checked" not in st.session_state:
+                st.session_state.items_checked = {num: False for num in manage_numbers}
+
+        # --- 真正的更新邏輯區塊 ---
+        if "items_to_update" in st.session_state and st.session_state.items_to_update:
+            with st.spinner('正在更新所選商品...'):
+                for manage_number in st.session_state.items_to_update:
+                    update_item_and_show_result(
+                        item_handler, manage_number,
+                        st.session_state.p_html_dict[manage_number]
+                    )
+
+            del st.session_state.items_to_update
+            st.markdown("---")
+
+        def update_single_checkbox(m_number):
+            st.session_state.items_checked[m_number] = st.session_state[f"checkbox_{m_number}"]
+
+        def update_all_checkboxes(select_all):
+            for num in manage_numbers:
+                st.session_state.items_checked[num] = select_all
+
+        # 全選與取消全選按鈕
+        cols = st.columns([1, 5])
+        with cols[0]:
+            if st.button("全選"):
+                update_all_checkboxes(True)
+            if st.button("取消全選"):
+                update_all_checkboxes(False)
+
+        # 個別勾選的清單
+        with cols[1]:
+            for manage_number in manage_numbers:
+                st.checkbox(
+                    f"**{manage_number}**",
+                    value=st.session_state.items_checked.get(manage_number, False),
+                    key=f"checkbox_{manage_number}",
+                    on_change=update_single_checkbox,
+                    args=(manage_number,)
+                )
+        # --- 執行按鈕 ---
         st.markdown("---")
-        st.subheader("更新至後台（單獨）")
-        # 個別更新按鈕
-        for i, manage_number in enumerate(manage_numbers):
-            # 每個按鈕獨佔一行並右對齊
-            cols = st.columns([4, 1])
-            with cols[-1]:
-                btn = st.button(f"更新 {manage_number}")
-            with cols[0]:
-                if btn:
-                    with st.spinner(f'正在更新 {manage_number}...'):
-                        update_item_and_show_result(
-                            item_handler, manage_number,
-                            st.session_state.p_html_dict[manage_number]
-                        )
+        selected_items = [num for num, checked in st.session_state.items_checked.items() if checked]
+        if st.button(f"更新所選項目 ({len(selected_items)})", disabled=not selected_items):
+            if selected_items:
+                confirm_update_dialog(selected_items)
 
     st.markdown("""
     <style>
