@@ -31,7 +31,7 @@ def generate_htmls(product):
     return {
         'pc_main': pc_main_gen.generate_html(product),
         'pc_sub': pc_sub_gen.generate_html(product),
-        'mobile': mobile_gen.generate_html(product)
+        'mobile': mobile_gen.generate_html(product, is_mobile=True)
     }
 
 

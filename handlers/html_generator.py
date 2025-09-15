@@ -12,16 +12,20 @@ class HTMLGenerator:
         with open(self.template_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    def generate_html(self, product: ProductDescriptionData) -> str:
+    def generate_html(self, product: ProductDescriptionData, is_mobile: bool = False) -> str:
         """
         接收 Product ORM 物件，回傳 HTML 字串
+        手機板有可使用之元素限制
         """
         # ======= 轉換圖片 =======
         htmls = []
         for image_info in product.image_infos:
             if img_desc := image_info.get("description"):
                 for desc in img_desc.splitlines():
-                    htmls.append(f'<p>{desc}</p>')
+                    if is_mobile:
+                        htmls.append(f'<p>{desc}</p>')
+                    else:
+                        htmls.append(f'<p style="font-size:24px">{desc}</p>')
             htmls.append(f'<img src="{image_info["url"]}" width="100%">')
 
         images_html = "\n".join(htmls)
