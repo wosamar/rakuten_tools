@@ -35,8 +35,13 @@ class ProductExcelParser:
 
     def parse_sheet(self, sheet_name: str) -> dict:
         df = pd.read_excel(self.xls, sheet_name=sheet_name, header=None)
-        description, feature, highlight, product_info, image_infos, image_descriptions = None, None, "", {}, [], []
+        if df.shape[1] < 3:
+            return {}
 
+        # 清掉全形空白和零寬空白
+        df = df.applymap(lambda x: str(x).replace("\u200b", "").strip() if not pd.isna(x) else x)
+
+        description, feature, highlight, product_info, image_infos, image_descriptions = None, None, "", {}, [], []
         image_infos = []
         for i, val in enumerate(df.iloc[:, 0]):
             val = str(val).strip()
@@ -44,6 +49,7 @@ class ProductExcelParser:
                 for k in range(i + 1, len(df)):
                     a_val = df.iloc[k, 0]
                     c_val = df.iloc[k, 2]
+                    print(a_val, c_val)
                     if (any(header in str(a_val).strip() for header in self.known_headers) or
                             pd.isna(a_val) or
                             not a_val.lower().endswith((".jpg", ".jpeg", ".png"))):
@@ -84,5 +90,6 @@ class ProductExcelParser:
         products = []
         for sheet in self.xls.sheet_names:
             if "文案" in sheet:
-                products.append(self.parse_sheet(sheet))
+                if product := self.parse_sheet(sheet):
+                    products.append(product)
         return products

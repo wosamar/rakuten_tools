@@ -20,6 +20,13 @@ class ItemHandler:
             "Content-Type": "application/json"
         }
 
+    def get_item(self, manage_number: str) -> dict:
+        url = self.endpoint_template.format(manageNumber=manage_number)
+        resp = requests.get(url, headers=self.headers)
+        if resp.status_code != 200:
+            raise Exception(f"GET failed: {resp.status_code}, {resp.text}")
+        return resp.json()
+
     def patch_item(self, product: ProductData):
         url = self.endpoint_template.format(manageNumber=product.manage_number)
         data = product.to_patch_payload()
@@ -31,6 +38,7 @@ class ItemHandler:
         return resp
 
 
+# TODO:重構ItemHandler
 class RakutenProductExporter:
     def __init__(self, auth_token: str):
         self.url = "https://api.rms.rakuten.co.jp/es/2.0/items/bulk-get"
@@ -100,87 +108,33 @@ class RakutenProductExporter:
         }
 
 
+def update_alt_flow(auth_token: str, manage_number: str):
+    item_handler = ItemHandler(auth_token)
+
+    item_data = item_handler.get_item(manage_number)
+
+    title = item_data.get("title", "")
+    alt_text = title.replace(" ", "")
+
+    images_payload = []
+    for img in item_data.get("images", []):
+        images_payload.append({
+            "type": img.get("type"),
+            "location": img.get("location"),
+            "alt": alt_text
+        })
+
+    payload = {"manage_number": manage_number, "images": images_payload}
+
+    patch_resp = item_handler.patch_item(ProductData(**payload))
+
+    return {"alt_text": alt_text, "resp": patch_resp}
+
+
 if __name__ == '__main__':
-    raw_dic = {k: "" for k in [5, 10, 15, 20]}
-    raw_dic[20] = """
-    tra-bull-01
-    tra-bull-02
-    tra-bull-04
-    tra-bull-07
-    tra-bull-06
-    tra-bull-08
-    tra-bull-08
-    tra-bull-08
-    tra-echobuckle-01
-    tra-echobuckle-01
-    tra-echobuckle-01
-    tra-echobuckle-01
-    tra-echobuckle-02
-    tra-echobuckle-02
-    tra-echobuckle-02
-    tra-echobuckle-03
-    tra-echobuckle-03
-    tra-echobuckle-03
-    tra-echobuckle-04
-    tra-lifenergy-01
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-02
-    tra-lifenergy-04
-    tra-lifenergy-05
-    tra-lifenergy-06
-    tra-lifenergy-08
+    manage_numbers = """
+    tra-azureland-01
     """
-    raw_dic[15] = """tra-gemcrown-01
-    tra-gemcrown-02
-    tra-gemcrown-03
-    tra-gemcrown-04
-    tra-gemcrown-05
-    tra-hiq-06
-    tra-bull-06
-    tra-healthbody-01
-    tra-healthbody-04
-    tra-healthbody-05
-    tra-healthbody-05
-    tra-healthbody-05
-    tra-healthbody-06
-    tra-healthbody-07
-    tra-healthbody-07
-    tra-healthbody-07
-    tra-healthbody-07"""
-    raw_dic[10] = """
-    tra-washi-04
-    tra-washi-01
-    tra-alody-03
-    tra-tne-03
-    tra-tne-04
-    tra-tne-05"""
-    raw_dic[5] = """
-    tra-washi-02
-    tra-lotboard-01
-    tra-lotboard-02
-    tra-lotboard-03
-    tra-lotboard-04
-    tra-lotboard-05
-    tra-hiq-01
-    tra-hiq-02
-    tra-hiq-05
-    tra-unemac-01
-    tra-unemac-02
-    tra-unemac-03
-    tra-unemac-04
-    tra-unemac-05
-    """
-    exporter = RakutenProductExporter(env_settings.auth_token)
-    for p, raw in raw_dic.items():
-        exporter.run(
-            raw_text=raw,
-            fields=["manage_number", "title", "standard_price", "reference_price"],
-            csv_file=str(env_settings.output_dir / f"{p}-products.csv")
-        )
-        print("查詢中...")
-        time.sleep(5)
+    for n in manage_numbers.strip().splitlines():
+        update_alt_flow(env_settings.auth_token, n)
+        time.sleep(2)
