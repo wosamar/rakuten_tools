@@ -110,19 +110,23 @@ class RakutenProductExporter:
 
 def update_alt_flow(auth_token: str, manage_number: str):
     item_handler = ItemHandler(auth_token)
-
     item_data = item_handler.get_item(manage_number)
 
     title = item_data.get("title", "")
     alt_text = title.replace(" ", "")
 
     images_payload = []
+    shop_name = manage_number.split("-")[-2]
     for img in item_data.get("images", []):
-        images_payload.append({
-            "type": img.get("type"),
-            "location": img.get("location"),
-            "alt": alt_text
-        })
+        location = img.get("location")
+        if shop_name in location:
+            images_payload.append({
+                "type": img.get("type"),
+                "location": location,
+                "alt": alt_text
+            })
+        else:
+            images_payload.append(img)  # 避免覆蓋「海外通販」圖片
 
     payload = {"manage_number": manage_number, "images": images_payload}
 
@@ -133,8 +137,9 @@ def update_alt_flow(auth_token: str, manage_number: str):
 
 if __name__ == '__main__':
     manage_numbers = """
-    tra-azureland-01
+    tra-gnfar-01
+    tra-gnfar-02
     """
     for n in manage_numbers.strip().splitlines():
-        update_alt_flow(env_settings.auth_token, n)
+        update_alt_flow(env_settings.auth_token, n.strip())
         time.sleep(2)
