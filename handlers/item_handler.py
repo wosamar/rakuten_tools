@@ -1,7 +1,4 @@
-import csv
 import json
-import time
-from pathlib import Path
 from typing import List, Dict
 
 import requests
@@ -14,100 +11,73 @@ env_settings = EnvSettings()
 
 class ItemHandler:
     def __init__(self, auth_token: str):
-        self.endpoint_template = "https://api.rms.rakuten.co.jp/es/2.0/items/manage-numbers/{manageNumber}"
+        self.base_url = "https://api.rms.rakuten.co.jp/es/2.0/items"
         self.headers = {
             "Authorization": f"Bearer {auth_token}",
             "Content-Type": "application/json"
         }
 
+    def search_item(self, params: dict) -> List[Dict]:
+        url = f"{self.base_url}/search"
+
+        result = []
+        page_size = 100
+        max_page = 10
+
+        # 確保每頁筆數固定
+        params.update({"hits": page_size})
+
+        for page in range(max_page):
+            offset = page * page_size
+            params.update({"offset": offset})
+
+            resp = requests.get(
+                url,
+                params=params,
+                headers=self.headers
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+            # 拿到 results
+            items = data.get("results", [])
+            if not items:  # 沒有更多資料就結束
+                break
+
+            result.extend(items)
+
+            # 如果本頁數量小於 page_size，也代表已經抓完
+            if len(items) < page_size:
+                break
+
+        return result
+
     def get_item(self, manage_number: str) -> dict:
-        url = self.endpoint_template.format(manageNumber=manage_number)
+        url = f"{self.base_url}/manage-numbers/{manage_number}"
         resp = requests.get(url, headers=self.headers)
-        if resp.status_code != 200:
-            raise Exception(f"GET failed: {resp.status_code}, {resp.text}")
+        resp.raise_for_status()
+
         return resp.json()
 
     def patch_item(self, product: ProductData):
-        url = self.endpoint_template.format(manageNumber=product.manage_number)
+        url = f"{self.base_url}/manage-numbers/{product.manage_number}"
         data = product.to_patch_payload()
         resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
-
-        if resp.status_code != 204:
-            raise Exception("\n".join([error.get("message") for error in resp.json().get("errors")]))
+        resp.raise_for_status()
 
         return resp
 
+    def bulk_get_item(self, manage_numbers: list):
+        url = f"{self.base_url}/bulk-get"
+        data = {"manageNumbers": manage_numbers}
+        resp = requests.post(url, headers=self.headers, data=json.dumps(data))
 
-# TODO:重構ItemHandler
-class RakutenProductExporter:
-    def __init__(self, auth_token: str):
-        self.url = "https://api.rms.rakuten.co.jp/es/2.0/items/bulk-get"
-        self.headers = {"Authorization": f"Bearer {auth_token}"}
+        resp.raise_for_status()
 
-    def _parse_input(self, raw_text: str) -> List[str]:
-        lines = list(set(raw_text.splitlines()))
-        return [s.strip() for s in lines if s.strip()]
-
-    def fetch_products(self, manage_numbers: List[str]) -> Dict[str, "ProductData"]:
-        res = requests.post(self.url, json={"manageNumbers": manage_numbers}, headers=self.headers)
-        data = res.json()
-
-        if res.status_code != 200:
-            print(f"Status code: {res.status_code}")  # 印出回傳狀態碼
-            print(data)
-
-        result = {}
-        for item in data.get("results", []):
-            product = ProductData.from_api(item)
-            result[item.get("manageNumber")] = product
-        return result
-
-    def download_images(self, products: Dict[str, "ProductData"], save_dir="images"):
-        Path(save_dir).mkdir(exist_ok=True)
-        for manage_no, product in products.items():
-            for idx, img in enumerate(product.images, start=1):
-                url = img.location
-                ext = url.split(".")[-1]
-                img_path = Path(save_dir) / f"{manage_no}_{idx}.{ext}"
-                try:
-                    r = requests.get(url)
-                    r.raise_for_status()
-                    img_path.write_bytes(r.content)
-                except Exception:
-                    continue
-
-    def export_csv(self, products: Dict[str, "ProductData"], fields: List[str], csv_file="products.csv"):
-        results = [{f: getattr(p, f, None) for f in fields} for p in products.values()]
-        csv_path = Path(csv_file)
-        csv_path.parent.mkdir(parents=True, exist_ok=True)  # 確保資料夾存在
-        with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fields)
-            writer.writeheader()
-            writer.writerows(results)
-        print(f"完成！資料存於 {csv_path}")
-
-    def run(self, raw_text: str, fields: List[str],
-            save_dir="images", download_images=False,
-            csv_file="products.csv"):
-        manage_numbers = self._parse_input(raw_text)
-        products = self.fetch_products(manage_numbers)
-        if download_images:
-            self.download_images(products, save_dir)
-        self.export_csv(products, fields, csv_file)
-
-        found = list(products.keys())
-        not_found = [m for m in manage_numbers if m not in found]
-        total_images = sum(len(p.images) for p in products.values())
-
-        return {
-            "total_images": total_images,
-            "found": found,
-            "not_found": not_found,
-            "save_dir": save_dir,
-            "products": products.values()
-        }
+        return resp.json()
 
 
+# 重置所有圖片說明
 def update_alt_flow(auth_token: str, manage_number: str):
     item_handler = ItemHandler(auth_token)
     item_data = item_handler.get_item(manage_number)
@@ -135,11 +105,52 @@ def update_alt_flow(auth_token: str, manage_number: str):
     return {"alt_text": alt_text, "resp": patch_resp}
 
 
+# 更新選項
+def patch_customization_option(auth_token: str, new_option: dict):
+    params = {
+        "isHiddenItem": "false"
+    }
+    item_handler = ItemHandler(auth_token)
+    item_data = item_handler.search_item(params)
+
+    manage_numbers = []
+
+    for data in item_data:
+        manage_number = data.get("item").get("manageNumber")
+        options = data.get("item").get("customizationOptions", [])
+
+        print(manage_number)
+
+        # 檢查是否已有相同 displayName（比對前20個字）
+        if any(opt.get("displayName")[:20] == new_option["displayName"][:20] for opt in options):
+            print(f"跳過 {manage_number}，因為已存在相同 displayName")
+            continue
+
+        options.append(new_option)
+        product = ProductData(
+            manage_number=manage_number,
+            customization_options=options
+        )
+        item_handler.patch_item(product)
+
+        manage_numbers.append(manage_number)
+        # break
+
+    print(f"已更新{len(manage_numbers)}項商品")
+
+
 if __name__ == '__main__':
-    manage_numbers = """
-    tra-gnfar-01
-    tra-gnfar-02
-    """
-    for n in manage_numbers.strip().splitlines():
-        update_alt_flow(env_settings.auth_token, n.strip())
-        time.sleep(2)
+    # manage_numbers = """
+    # tra-gnfar-01
+    # tra-gnfar-02
+    # """
+    # for n in manage_numbers.strip().splitlines():
+    #     update_alt_flow(env_settings.auth_token, n.strip())
+    #     time.sleep(2)
+
+    new_opt = {
+        'displayName': '台湾中秋節連休に伴い、9月30日（火）11時以降～10月3日（金）11時までのご注文は、10月13日（月）より順次発送いたします。10月3日（金）11時以降～2025年10月12日（日）までのご注文は、2025年10月16日（木）より順次発送いたします。詳細は店舗ページにご参照ください。',
+        'inputType': 'MULTIPLE_SELECTION', 'required': True,
+        'selections': [{'displayValue': '了解した。'}]
+    }
+    patch_customization_option(env_settings.auth_token, new_opt)
