@@ -10,6 +10,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 
 class EnvSettings(BaseSettings):
     # Files
+    tmp_dir: Path = BASE_DIR / "templates"
     output_dir: Path = BASE_DIR / "templates" / "output"
     html_tmp_dir: Path = BASE_DIR / "templates" / "html_tmp"
 

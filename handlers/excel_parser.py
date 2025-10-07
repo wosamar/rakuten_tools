@@ -1,9 +1,12 @@
+import json
 import re
 from io import BytesIO
 
 import pandas as pd
 
+from env_settings import EnvSettings
 
+env_settings=EnvSettings()
 class ProductExcelParser:
     def __init__(self, excel_bytes: bytes):
         self.xls = self.xls = pd.ExcelFile(BytesIO(excel_bytes))
@@ -15,6 +18,10 @@ class ProductExcelParser:
             "「商品5大賣點」<每項一段文字即可>",
             "「商品詳細資訊」"
         ]
+
+        product_info_dict_path = env_settings.tmp_dir / "product_info_td.json"
+        with open(product_info_dict_path, "r", encoding="utf-8") as f:
+            self.field_mapping = json.load(f)
 
     def collect_block(self, df: pd.DataFrame, start_idx: int, col: int = 2) -> list[str]:
         result = []
@@ -49,7 +56,6 @@ class ProductExcelParser:
                 for k in range(i + 1, len(df)):
                     a_val = df.iloc[k, 0]
                     c_val = df.iloc[k, 2]
-                    print(a_val, c_val)
                     if (any(header in str(a_val).strip() for header in self.known_headers) or
                             pd.isna(a_val) or
                             not a_val.lower().endswith((".jpg", ".jpeg", ".png"))):
@@ -72,6 +78,8 @@ class ProductExcelParser:
                         break
                     if not pd.isna(c_val):
                         key = str(a_val).split("\n")[0].strip()
+                        key = self.field_mapping.get(key, key)
+
                         value = str(c_val).strip()
                         if key in product_info:
                             product_info[key] += f"\n{value}"

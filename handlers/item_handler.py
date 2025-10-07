@@ -106,6 +106,7 @@ def update_alt_flow(auth_token: str, manage_number: str):
 
 
 # 更新選項
+# TODO:整理流程
 def patch_customization_option(auth_token: str, new_option: dict):
     params = {
         "isHiddenItem": "false"
