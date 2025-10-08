@@ -55,14 +55,19 @@ class ProductExcelParser:
             if "「商品詳細介紹」<圖片含文字>" in val:
                 for k in range(i + 1, len(df)):
                     a_val = df.iloc[k, 0]
-                    c_val = df.iloc[k, 2]
                     if (any(header in str(a_val).strip() for header in self.known_headers) or
                             pd.isna(a_val) or
-                            not a_val.lower().endswith((".jpg", ".jpeg", ".png"))):
+                            not str(a_val).lower().endswith((".jpg", ".jpeg", ".png"))):
                         break
+
+                    c_val = df.iloc[k, 2] if df.shape[1] > 2 else None
+                    d_val = df.iloc[k, 3] if df.shape[1] > 3 else None
+
                     key = str(a_val).split("\n")[0].strip()
-                    value = None if pd.isna(c_val) else str(c_val).strip()
-                    image_infos.append(dict(url=key, description=value))
+                    description_val = None if pd.isna(c_val) else str(c_val).strip()
+                    link_val = None if pd.isna(d_val) else str(d_val).strip()
+
+                    image_infos.append(dict(url=key, description=description_val, link=link_val))
 
             elif "「商品詳細介紹」<圖片無文字>" in val:
                 description = "\n".join(self.collect_block(df, i))

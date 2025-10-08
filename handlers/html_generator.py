@@ -20,13 +20,20 @@ class HTMLGenerator:
         # ======= 轉換圖片 =======
         htmls = []
         for image_info in product.image_infos:
+            # 處理圖片描述
             if img_desc := image_info.get("description"):
                 for desc in img_desc.splitlines():
                     if is_mobile:
                         htmls.append(f'<p>{desc}</p>')
                     else:
                         htmls.append(f'<p style="font-size:24px">{desc}</p>')
-            htmls.append(f'<img src="{image_info["url"]}" width="100%">')
+
+            # 處理圖片本身，並檢查是否有超連結
+            img_tag = f'<img src="{image_info["url"]}" width="100%">'
+            if link := image_info.get("link"):
+                htmls.append(f'<a href="{link}" target="_blank">{img_tag}</a>')
+            else:
+                htmls.append(img_tag)
 
         images_html = "\n".join(htmls)
 
