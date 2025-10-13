@@ -125,7 +125,7 @@ def show_page():
             # 使用 st.spinner 顯示載入中
             with st.spinner('正在轉換中...'):
                 # 實例化解析器並解析所有工作表
-                parser = ProductExcelParser(excel_bytes=uploaded_file.getvalue())
+                parser = ProductExcelParser(store_id, excel_bytes=uploaded_file.getvalue())
                 product_datas = parser.parse_all_sheets()
 
                 if not product_datas:

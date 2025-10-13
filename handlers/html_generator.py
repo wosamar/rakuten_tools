@@ -21,7 +21,7 @@ class HTMLGenerator:
         htmls = []
         for image_info in product.image_infos:
             # 處理圖片描述
-            if img_desc := image_info.get("description"):
+            if img_desc := image_info.description:
                 for desc in img_desc.splitlines():
                     if is_mobile:
                         htmls.append(f'<p>{desc}</p>')
@@ -29,8 +29,8 @@ class HTMLGenerator:
                         htmls.append(f'<p style="font-size:24px">{desc}</p>')
 
             # 處理圖片本身，並檢查是否有超連結
-            img_tag = f'<img src="{image_info["url"]}" width="100%">'
-            if link := image_info.get("link"):
+            img_tag = f'<img src="{image_info.image_url}" width="100%">'
+            if link := image_info.link:
                 htmls.append(f'<a href="{link}" target="_blank">{img_tag}</a>')
             else:
                 htmls.append(img_tag)

@@ -6,9 +6,11 @@ import pandas as pd
 
 from env_settings import EnvSettings
 
-env_settings=EnvSettings()
+env_settings = EnvSettings()
+
+
 class ProductExcelParser:
-    def __init__(self, excel_bytes: bytes):
+    def __init__(self, shop_code: str, excel_bytes: bytes):
         self.xls = self.xls = pd.ExcelFile(BytesIO(excel_bytes))
         self.known_headers = [
             "商品圖片名稱",
@@ -19,6 +21,10 @@ class ProductExcelParser:
             "「商品詳細資訊」"
         ]
 
+        # 商品圖片連結
+        shop_name = shop_code.split("-")[-1]
+        self.cabinet_prefix = f"https://image.rakuten.co.jp/{env_settings.TENPO_NAME}/cabinet/{shop_name}"
+        # 詳細資訊欄位名對照
         product_info_dict_path = env_settings.tmp_dir / "product_info_td.json"
         with open(product_info_dict_path, "r", encoding="utf-8") as f:
             self.field_mapping = json.load(f)
@@ -46,7 +52,12 @@ class ProductExcelParser:
             return {}
 
         # 清掉全形空白和零寬空白
-        df = df.applymap(lambda x: str(x).replace("\u200b", "").strip() if not pd.isna(x) else x)
+        df = df.apply(
+            lambda col: col.map(
+                lambda x: str(x).replace("\u200b", "").strip() if not pd.isna(x) else x
+            ),
+            axis=0
+        )
 
         description, feature, highlight, product_info, image_infos, image_descriptions = None, None, "", {}, [], []
         image_infos = []
@@ -67,7 +78,11 @@ class ProductExcelParser:
                     description_val = None if pd.isna(c_val) else str(c_val).strip()
                     link_val = None if pd.isna(d_val) else str(d_val).strip()
 
-                    image_infos.append(dict(url=key, description=description_val, link=link_val))
+                    image_infos.append(dict(
+                        image_url=f"{self.cabinet_prefix}/{key}",
+                        description=description_val,
+                        link=link_val
+                    ))
 
             elif "「商品詳細介紹」<圖片無文字>" in val:
                 description = "\n".join(self.collect_block(df, i))
