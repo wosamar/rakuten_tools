@@ -97,7 +97,7 @@ class ProductData(BaseModel):
     item_number: Optional[str] = None
     title: Optional[str] = None
     tagline: Optional[str] = None
-    product_description: Optional[str] = None
+    product_description: Optional[ProductDescription] = None
     sales_description: Optional[str] = None  # PC用販売説明文(pc_sub)
     images: List[ProductImage] = Field(default_factory=list)
     genre_id: Optional[str] = None
