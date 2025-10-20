@@ -1,34 +1,32 @@
 from env_settings import BASE_DIR
 from handlers.html_generator import HTMLGenerator
+from models.product_descript import ProductDescriptionData
 
 
-def test_mobile_html_generation():
-    tmp_path = BASE_DIR / "page_designs" / "tmp"
+def test_html_generator():
     # 範例 product_data
     product_data = {
-        "images": "fumeow/tra-fumeow",
+        "shop_code":"tra-demo",
+        "image_infos": [{"image_url":"","description":"","link":""}],
         "description": "お茶は自然農法で栽培され…\n低温乾燥と熟成の製法で…",
-        "features": "アソート烏龍茶ティーバッグ四角ボックス…",
-        "highlights": "お茶は自然農法…\nティーバッグ素材は天然…",
-        "product_info": "規格名稱\tペット烏龍茶ティーバッグ20個入りボックス\n內容量\tティーバッグ20個入り、1個3グラム"
+        "feature": "アソート烏龍茶ティーバッグ四角ボックス…",
+        "highlight": "お茶は自然農法…\nティーバッグ素材は天然…",
+        "product_info": {"規格名稱":"ペット烏龍茶ティーバッグ20個入りボックス","內容量":"ティーバッグ20個入り、1個3グラム"}
     }
 
     # 先建立一個暫時 template
-    template_file = tmp_path / "mobile_template.html"
+    template_file = BASE_DIR / "tests" / "tmp" / "mobile_template.html"
+    template_file.parent.mkdir(parents=True, exist_ok=True)
     template_file.write_text(
         "{{IMAGES}}\n{{DESCRIPTION}}\n{{FEATURES}}\n{{HIGHLIGHTS}}\n{{PRODUCT_INFO}}", encoding="utf-8"
     )
 
     # 建立 generator
-    generator = HTMLGenerator(str(template_file), image_base_url="https://image.rakuten.co.jp/giftoftw/cabinet")
+    generator = HTMLGenerator(str(template_file))
 
     # 生成 HTML
-    output_file = tmp_path / "output.html"
-    generator.generate_html(product_data, str(output_file))
+    content = generator.generate_html(ProductDescriptionData(**product_data))
 
-    # 驗證輸出存在
-    assert output_file.exists()
-    content = output_file.read_text(encoding="utf-8")
     assert "<img src=" in content
     assert "<p>" in content
     assert "<tr>" in content
