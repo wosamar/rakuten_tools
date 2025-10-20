@@ -56,10 +56,15 @@ class CampaignUpdateFlow:
         )
 
         # 2. Categorize all items into mutually exclusive groups.
+        visible_item_ids = {
+            k
+            for k, v in self.original_items_cache.items()
+            if not v.is_hidden
+        }
         categories = self._categorize_items(
-            set(self.original_items_cache.keys()),
-            set(item_to_point_rate.keys()),
-            set(item_to_campaign_code.keys()),
+            visible_ids=visible_item_ids,
+            point_ids=set(item_to_point_rate.keys()),
+            feature_ids=set(item_to_campaign_code.keys()),
         )
 
         # 3. Process each category and generate the corresponding payloads.
@@ -104,14 +109,17 @@ class CampaignUpdateFlow:
         return item_to_point_rate, item_to_campaign_code
 
     def _categorize_items(
-        self, all_product_ids: Set[str], point_ids: Set[str], feature_ids: Set[str]
+        self,
+        visible_ids: Set[str],
+        point_ids: Set[str],
+        feature_ids: Set[str],
     ) -> Dict[str, Set[str]]:
         """Sorts item IDs into four mutually exclusive categories."""
         point_and_feature_ids = point_ids.intersection(feature_ids)
         point_only_ids = point_ids - feature_ids
         feature_only_ids = feature_ids - point_ids
         campaign_item_ids = point_ids.union(feature_ids)
-        no_event_ids = all_product_ids - campaign_item_ids
+        no_event_ids = visible_ids - campaign_item_ids
 
         return {
             "point_and_feature": point_and_feature_ids,

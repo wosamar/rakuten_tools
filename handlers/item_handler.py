@@ -17,12 +17,10 @@ class ItemHandler:
             "Content-Type": "application/json"
         }
 
-    def search_item(self, params: dict) -> List[Dict]:
+    def search_item(self, params: dict, page_size: int = 100, max_page: int = 10) -> List[Dict]:
         url = f"{self.base_url}/search"
 
         result = []
-        page_size = 100
-        max_page = 10
 
         # 確保每頁筆數固定
         params.update({"hits": page_size})

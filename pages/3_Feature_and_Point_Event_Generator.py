@@ -2,8 +2,10 @@ import streamlit as st
 import json
 from datetime import datetime
 
-from env_settings import EnvSettings
+from flows.campaign_update_flow import CampaignUpdateFlow, CampaignConfig
 from handlers.item_handler import ItemHandler
+from models.item import ProductData
+from env_settings import EnvSettings
 
 
 def show_page():
@@ -26,7 +28,7 @@ def show_page():
         )
         point_html_format = st.text_area(
             "HTML模板",
-            value='<img src="1024mr_{point_rate}p_1080s.jpg"width="100%">{original_html}',
+            value='<img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_{point_rate}p_1080s.jpg"width="100%">{original_html}',
             key="point_html",
             height=200
         )
@@ -42,7 +44,7 @@ def show_page():
         )
         feature_html_format = st.text_area(
             "HTML模板",
-            value='<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="1024mr_kv_1280.jpg"width="100%"/a>{original_html}',
+            value='<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/a>{original_html}',
             key="feature_html",
             height=200
         )
@@ -84,84 +86,56 @@ def show_page():
     feature_item_list = st.text_area("ID列表", key="feature_ids")
 
     if st.button("生成"):
-        # --- Point Event Data Structure ---
-        point_event_data = {
-            "title_format": point_title_format,
-            "html_format": point_html_format,
-            "start_time": start_time_str,
-            "end_time": end_time_str,
-            "campaigns": []
-        }
-        exclusion_ids = set()
+        # --- Collect Point Campaigns ---
+        point_campaigns = []
         for config in point_campaigns_inputs:
             item_ids = {line.strip() for line in config["items"].split('\n') if line.strip()}
             if item_ids:
-                point_event_data["campaigns"].append({
+                point_campaigns.append({
                     "point_rate": config["point_rate"],
                     "items": list(item_ids)
                 })
-                exclusion_ids.update(item_ids)
 
-        # --- Feature Event Data Structure ---
-        feature_event_data = {
-            "title_format": feature_title_format,
-            "html_format": feature_html_format,
-            "campaigns": []
-        }
+        # --- Collect Feature Campaign ---
         feature_item_ids = {line.strip() for line in feature_item_list.split('\n') if line.strip()}
-        if feature_item_ids:
-            feature_event_data["campaigns"].append({
-                "campaign_code": feature_campaign_code,
-                "items": list(feature_item_ids)
-            })
-            exclusion_ids.update(feature_item_ids)
-
-        # --- No Event Items ---
-        with st.spinner("正在從後台取得所有商品資料..."):
-            # MOCK DATA FOR DEMO
-            # In production, replace this with the actual API call
-            # item_handler = ItemHandler(env_settings.auth_token)
-            # all_items = item_handler.search_item({})
-            all_items = [
-                {"manageNumber": "tra-demo-01", "isHiddenItem": False},
-                {"manageNumber": "twe-demo-02", "isHiddenItem": False},
-                {"manageNumber": "no-event-01", "isHiddenItem": False},
-                {"manageNumber": "no-event-02", "isHiddenItem": False},
-                {"manageNumber": "hidden-item-01", "isHiddenItem": True},
-            ]
-
-        no_event_items = []
-        for item in all_items:
-            is_hidden = item.get('isHiddenItem', True)
-            manage_number = item.get('manageNumber')
-            if manage_number and manage_number not in exclusion_ids and not is_hidden:
-                no_event_items.append(manage_number)
-
-        no_event_data = {
-            "html_format": no_event_html_format,
-            "campaigns": [{"items": no_event_items}]
+        feature_campaign = {
+            "campaign_code": feature_campaign_code,
+            "items": list(feature_item_ids)
         }
+
+        # --- Get All Products ---
+        with st.spinner("正在從後台取得所有商品資料..."):
+            env_settings = EnvSettings()
+            item_handler = ItemHandler(env_settings.auth_token)
+            all_items_raw = item_handler.search_item({},page_size=5, max_page=1)
+            all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
+            print(all_products)
+
+        # --- Setup and Execute Campaign Flow ---
+        campaign_config = CampaignConfig(
+            point_title_format=point_title_format,
+            point_html_format=point_html_format,
+            start_time=start_time_str,
+            end_time=end_time_str,
+            feature_title_format=feature_title_format,
+            feature_html_format=feature_html_format,
+            no_event_html_format=no_event_html_format,
+        )
+
+        flow = CampaignUpdateFlow()
+        final_payloads = flow.execute(
+            all_products=all_products,
+            config=campaign_config,
+            point_campaigns=point_campaigns,
+            feature_campaign=feature_campaign,
+        )
 
         # --- Display Results ---
         st.write("---")
         st.subheader("生成結果")
-
-        st.markdown("#### 點數活動商品")
-        st.json(json.dumps(point_event_data, indent=4, ensure_ascii=False))
-
-        st.markdown("#### 特輯商品")
-        st.json(json.dumps(feature_event_data, indent=4, ensure_ascii=False))
-
-        st.markdown("#### 無活動商品")
-        st.json(json.dumps(no_event_data, indent=4, ensure_ascii=False))
-
-        st.markdown("#### 無活動商品列表 (DataFrame)")
-        if no_event_items:
-            st.dataframe(no_event_items)
-        else:
-            st.warning("沒有找到符合條件的商品。")
+        st.json(json.dumps(final_payloads, indent=4, ensure_ascii=False))
 
 
 if __name__ == '__main__':
-    # env_settings = EnvSettings() # Keep this commented out for demo purposes without API key
+    env_settings = EnvSettings() # Keep this commented out for demo purposes without API key
     show_page()

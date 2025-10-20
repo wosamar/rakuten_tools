@@ -105,6 +105,7 @@ class ProductData(BaseModel):
     standard_price: Optional[int] = None
     reference_price: Optional[int] = None
     point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
+    is_hidden: bool = False
 
     customization_options: List[CustomizationOption] = Field(
         default_factory=list  # , alias="customizationOptions"
@@ -112,9 +113,32 @@ class ProductData(BaseModel):
 
     @classmethod
     def from_api(cls, data: dict) -> "ProductData":
+        """
+        Creates a ProductData instance from a raw API dictionary.
+        Handles both detailed (get_item) and summary (search_item) formats.
+        """
+        # Handle nested product description from detailed view, fallback to flat view
+        if "productDescription" in data and isinstance(data["productDescription"], dict):
+            product_desc_data = data["productDescription"]
+            pc_desc = product_desc_data.get("pc", "")
+            sp_desc = product_desc_data.get("sp", "")
+        else:
+            # Fallback for search results or other flat structures
+            pc_desc = data.get("descriptionForPC", "")
+            sp_desc = data.get("descriptionForSmartPhone", "")
+
+        # Handle different title fields
+        title = data.get("title") or data.get("itemName", "")
+
+        # Handle different hidden flags
+        is_hidden = data.get("hideItem", data.get("isHiddenItem", False))
+
+        # Use salesDescription if present, else fallback to pc_desc
+        sales_desc = data.get("salesDescription") or pc_desc
+
         def get_reference_price(variant: dict) -> Optional[int]:
             ref = variant.get("referencePrice")
-            if ref and ref.get("displayType") == "REFERENCE_PRICE":  # 有做二重價格的情況
+            if ref and ref.get("displayType") == "REFERENCE_PRICE":
                 return int(ref.get("value", 0))
             return None
 
@@ -124,17 +148,11 @@ class ProductData(BaseModel):
         standard_price = first_variant.get("standardPrice")
         reference_price = get_reference_price(first_variant)
 
-        # 解析 customizationOptions
         co_raw = data.get("customizationOptions", []) or []
         customization_options = []
         for opt in co_raw:
-            # selections 轉為模型
             sels = opt.get("selections")
-            if sels is not None:
-                sel_models = [CustomizationSelection(**s) for s in sels]
-            else:
-                sel_models = None
-
+            sel_models = [CustomizationSelection(**s) for s in sels] if sels is not None else None
             customization_options.append(
                 CustomizationOption(
                     displayName=opt.get("displayName", ""),
@@ -145,19 +163,20 @@ class ProductData(BaseModel):
             )
 
         return cls(
-            manage_number=data.get("manageNumber"),
+            manage_number=data.get("manageNumber", ""),
             item_number=data.get("itemNumber"),
-            title=data.get("title"),
+            title=title,
             tagline=data.get("tagline"),
-            product_description=data.get("productDescription", {}).get("sp"),
-            sales_description=data.get("salesDescription"),
+            product_description=ProductDescription(pc=pc_desc, sp=sp_desc),
+            sales_description=sales_desc,
             images=[ProductImage(**img) for img in data.get("images", [])],
             genre_id=data.get("genreId"),
             tags=tags,
             standard_price=standard_price,
             reference_price=reference_price,
-            customizationOptions=customization_options,
-            pointCampaign=PointCampaign(**data['pointCampaign']) if 'pointCampaign' in data else None
+            customization_options=customization_options,
+            point_campaign=PointCampaign(**data['pointCampaign']) if 'pointCampaign' in data else None,
+            is_hidden=is_hidden
         )
 
     def to_patch_payload(self) -> dict:
