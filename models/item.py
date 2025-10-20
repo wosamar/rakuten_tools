@@ -78,18 +78,33 @@ class CustomizationOption(BaseModel):
         return data
 
 
+class ApplicablePeriod(BaseModel):
+    start: str
+    end: str
+
+
+class Benefits(BaseModel):
+    point_rate: int = Field(..., alias="pointRate")  # ポイント変倍率
+
+
+class PointCampaign(BaseModel):
+    applicable_period: ApplicablePeriod = Field(..., alias="applicablePeriod")  # ポイント変倍適用期間
+    benefits: Benefits  # ポイント情報
+
+
 class ProductData(BaseModel):
     manage_number: str
     item_number: Optional[str] = None
     title: Optional[str] = None
     tagline: Optional[str] = None
-    product_description: Optional[ProductDescription] = None
+    product_description: Optional[str] = None
     sales_description: Optional[str] = None  # PC用販売説明文(pc_sub)
     images: List[ProductImage] = Field(default_factory=list)
     genre_id: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
     standard_price: Optional[int] = None
     reference_price: Optional[int] = None
+    point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
 
     customization_options: List[CustomizationOption] = Field(
         default_factory=list  # , alias="customizationOptions"
@@ -134,17 +149,15 @@ class ProductData(BaseModel):
             item_number=data.get("itemNumber"),
             title=data.get("title"),
             tagline=data.get("tagline"),
-            product_description=ProductDescription(
-                pc=data.get("productDescription", {}).get("pc"),
-                sp=data.get("productDescription", {}).get("sp")
-            ) if data.get("productDescription") else None,
+            product_description=data.get("productDescription", {}).get("sp"),
             sales_description=data.get("salesDescription"),
             images=[ProductImage(**img) for img in data.get("images", [])],
             genre_id=data.get("genreId"),
             tags=tags,
             standard_price=standard_price,
             reference_price=reference_price,
-            customizationOptions=customization_options
+            customizationOptions=customization_options,
+            pointCampaign=PointCampaign(**data['pointCampaign']) if 'pointCampaign' in data else None
         )
 
     def to_patch_payload(self) -> dict:
@@ -157,13 +170,7 @@ class ProductData(BaseModel):
         if self.tagline:
             payload["tagline"] = self.tagline
         if self.product_description:
-            desc = {}
-            if self.product_description.pc:
-                desc["pc"] = self.product_description.pc
-            if self.product_description.sp:
-                desc["sp"] = self.product_description.sp
-            if desc:
-                payload["productDescription"] = desc
+            payload["productDescription"] = {"sp": self.product_description}
         if self.sales_description:
             payload["salesDescription"] = self.sales_description
         if self.images:
@@ -172,6 +179,8 @@ class ProductData(BaseModel):
             payload["genreId"] = self.genre_id
         if self.tags:
             payload["tags"] = self.tags
+        if self.point_campaign:
+            payload["pointCampaign"] = self.point_campaign.model_dump(by_alias=True)
 
         if self.customization_options:
             payload["customizationOptions"] = [opt.to_api() for opt in self.customization_options]
