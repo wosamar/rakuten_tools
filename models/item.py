@@ -79,8 +79,8 @@ class CustomizationOption(BaseModel):
 
 
 class ApplicablePeriod(BaseModel):
-    start: str
-    end: str
+    start: str  # ポイント変倍率適用期間（開始日時）
+    end: str  # ポイント変倍率適用期間（終了日時）
 
 
 class Benefits(BaseModel):
@@ -93,9 +93,9 @@ class PointCampaign(BaseModel):
 
 
 class ProductData(BaseModel):
-    manage_number: str
-    item_number: Optional[str] = None
-    title: Optional[str] = None
+    manage_number: str  # 商品管理番号（商品URL）
+    item_number: Optional[str] = None  # 商品番号
+    title: Optional[str] = None  # 商品名
     tagline: Optional[str] = None
     product_description: Optional[ProductDescription] = None
     sales_description: Optional[str] = None  # PC用販売説明文(pc_sub)
@@ -105,7 +105,7 @@ class ProductData(BaseModel):
     standard_price: Optional[int] = None
     reference_price: Optional[int] = None
     point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
-    is_hidden: bool = False
+    is_hidden: bool = False  # 倉庫指定
 
     customization_options: List[CustomizationOption] = Field(
         default_factory=list  # , alias="customizationOptions"
@@ -204,3 +204,21 @@ class ProductData(BaseModel):
         if self.customization_options:
             payload["customizationOptions"] = [opt.to_api() for opt in self.customization_options]
         return payload
+
+    def to_csv_dict(self) -> dict:
+        """
+        Returns a dictionary of product data flattened for CSV output.
+        """
+        csv_data = {
+            "manage_number": self.manage_number,
+            "item_number": self.item_number or "",
+            "title": self.title or "",
+            "standard_price": self.standard_price or 0,
+            "product_description_pc": self.product_description.pc if self.product_description else "",
+            "product_description_sp": self.product_description.sp if self.product_description else "",
+            "sales_description": self.sales_description or "",
+            "point_rate": self.point_campaign.benefits.point_rate if self.point_campaign and self.point_campaign.benefits else 0,
+            "start_time": self.point_campaign.applicable_period.start if self.point_campaign and self.point_campaign.applicable_period else "",
+            "end_time": self.point_campaign.applicable_period.end if self.point_campaign and self.point_campaign.applicable_period else "",
+        }
+        return csv_data
