@@ -1,12 +1,11 @@
 import streamlit as st
 import json
-import csv
-import io
-
 from flows.campaign_update_flow import CampaignUpdateFlow, CampaignConfig
 from handlers.item_handler import ItemHandler
 from models.item import ProductData
 from env_settings import EnvSettings
+
+env_settings = EnvSettings()
 
 
 class SessionStateKeys:
@@ -28,6 +27,32 @@ class SessionStateKeys:
     FEATURE_IDS = "feature_ids"
 
 
+def init_session_state():
+    if SessionStateKeys.POINT_TITLE not in st.session_state:
+        st.session_state[SessionStateKeys.POINT_TITLE] = "10/24から{point_rate}倍ポイント {original_title}"
+    if SessionStateKeys.POINT_HTML not in st.session_state:
+        st.session_state[
+            SessionStateKeys.POINT_HTML] = '<img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_{point_rate}p_1080s.jpg"width="100%">{original_html}'
+    if SessionStateKeys.START_TIME_STR not in st.session_state:
+        st.session_state[SessionStateKeys.START_TIME_STR] = "2025-10-24T20:00:00+09:00"
+    if SessionStateKeys.END_TIME_STR not in st.session_state:
+        st.session_state[SessionStateKeys.END_TIME_STR] = "2025-10-27T09:59:59+09:00"
+    if SessionStateKeys.FEATURE_TITLE not in st.session_state:
+        st.session_state[SessionStateKeys.FEATURE_TITLE] = "{original_title}{campaign_code}"
+    if SessionStateKeys.FEATURE_HTML not in st.session_state:
+        st.session_state[
+            SessionStateKeys.FEATURE_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
+    if SessionStateKeys.NO_EVENT_HTML not in st.session_state:
+        st.session_state[
+            SessionStateKeys.NO_EVENT_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
+    if SessionStateKeys.FEATURE_CAMPAIGN_CODE not in st.session_state:
+        st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = ""
+    if SessionStateKeys.FEATURE_IDS not in st.session_state:
+        st.session_state[SessionStateKeys.FEATURE_IDS] = ""
+    if "final_payloads" not in st.session_state:
+        st.session_state["final_payloads"] = []
+
+
 def render_config_uploader():
     st.subheader("上傳設定檔")
     uploaded_config_file = st.file_uploader("上傳設定 JSON 檔案", type=["json"],
@@ -38,23 +63,32 @@ def render_config_uploader():
             try:
                 uploaded_data = json.load(uploaded_config_file)
                 if "config" in uploaded_data:
-                    st.session_state[SessionStateKeys.POINT_TITLE] = uploaded_data["config"].get("point_title_format", "")
+                    st.session_state[SessionStateKeys.POINT_TITLE] = uploaded_data["config"].get("point_title_format",
+                                                                                                 "")
                     st.session_state[SessionStateKeys.POINT_HTML] = uploaded_data["config"].get("point_html_format", "")
                     st.session_state[SessionStateKeys.START_TIME_STR] = uploaded_data["config"].get("start_time", "")
                     st.session_state[SessionStateKeys.END_TIME_STR] = uploaded_data["config"].get("end_time", "")
-                    st.session_state[SessionStateKeys.FEATURE_TITLE] = uploaded_data["config"].get("feature_title_format", "")
-                    st.session_state[SessionStateKeys.FEATURE_HTML] = uploaded_data["config"].get("feature_html_format", "")
-                    st.session_state[SessionStateKeys.NO_EVENT_HTML] = uploaded_data["config"].get("no_event_html_format", "")
+                    st.session_state[SessionStateKeys.FEATURE_TITLE] = uploaded_data["config"].get(
+                        "feature_title_format", "")
+                    st.session_state[SessionStateKeys.FEATURE_HTML] = uploaded_data["config"].get("feature_html_format",
+                                                                                                  "")
+                    st.session_state[SessionStateKeys.NO_EVENT_HTML] = uploaded_data["config"].get(
+                        "no_event_html_format", "")
 
                 if "point_campaigns" in uploaded_data:
                     for i, campaign in enumerate(uploaded_data["point_campaigns"]):
                         key_suffix = str(i + 1)
-                        st.session_state[SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(key_suffix)] = campaign.get("point_rate", 0)
-                        st.session_state[SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(key_suffix)] = "\n".join(campaign.get("items", []))
+                        st.session_state[
+                            SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(key_suffix)] = campaign.get(
+                            "point_rate", 0)
+                        st.session_state[SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(key_suffix)] = "\n".join(
+                            campaign.get("items", []))
 
                 if "feature_campaign" in uploaded_data:
-                    st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = uploaded_data["feature_campaign"].get("campaign_code", "")
-                    st.session_state[SessionStateKeys.FEATURE_IDS] = "\n".join(uploaded_data["feature_campaign"].get("items", []))
+                    st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = uploaded_data["feature_campaign"].get(
+                        "campaign_code", "")
+                    st.session_state[SessionStateKeys.FEATURE_IDS] = "\n".join(
+                        uploaded_data["feature_campaign"].get("items", []))
 
                 st.success("設定檔已成功載入！")
             except json.JSONDecodeError:
@@ -63,8 +97,59 @@ def render_config_uploader():
                 st.error(f"載入設定檔時發生錯誤: {e}")
 
 
+def generate_payloads(campaign_config, point_campaigns, feature_campaign):
+    # --- Get All Products ---
+    with st.spinner("正在從後台取得所有商品資料..."):
+        item_handler = ItemHandler(env_settings.auth_token)
+        all_items_raw = item_handler.search_item({}, page_size=10, max_page=1)
+        all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
+
+    flow = CampaignUpdateFlow()
+    final_payloads = flow.execute(
+        all_products=all_products,
+        config=campaign_config,
+        point_campaigns=point_campaigns,
+        feature_campaign=feature_campaign,
+    )
+    st.session_state["final_payloads"] = final_payloads
+
+    # --- Display Results ---
+    st.write("---")
+    st.subheader("生成結果")
+    st.json(json.dumps(final_payloads, indent=4, ensure_ascii=False), expanded=False)
+
+
+def execute_item_update():
+    if not st.session_state["final_payloads"]:
+        st.warning("沒有可更新的商品資訊。請先點擊 '生成' 按鈕。")
+        return
+
+    item_handler = ItemHandler(env_settings.auth_token)
+    updated_count = 0
+    failed_updates = []
+
+    for item_id, item_data in st.session_state["final_payloads"].items():
+        try:
+            # Create a ProductData object with only the manage_number and the generated payload
+            # The to_patch_payload method will handle filtering None values
+            product_to_update = ProductData(
+                manage_number=item_id,
+                **item_data["generated_payload"]
+            )
+            item_handler.patch_item(product_to_update)
+            updated_count += 1
+        except Exception as e:
+            failed_updates.append(f"商品 {item_id} 更新失敗: {e}")
+
+    if updated_count > 0:
+        st.success(f"成功更新 {updated_count} 項商品！")
+    if failed_updates:
+        st.error("部分商品更新失敗:")
+        for error_msg in failed_updates:
+            st.write(error_msg)
+
+
 def show_page():
-    env_settings = EnvSettings()
     st.set_page_config(
         page_title="特輯與點數活動產生器",
         page_icon="✨",
@@ -73,26 +158,7 @@ def show_page():
     st.title("特輯與點數活動產生器")
 
     # Initialize session state with default values if not already set
-    if SessionStateKeys.POINT_TITLE not in st.session_state:
-        st.session_state[SessionStateKeys.POINT_TITLE] = "10/24から{point_rate}倍ポイント {original_title}"
-    if SessionStateKeys.POINT_HTML not in st.session_state:
-        st.session_state[SessionStateKeys.POINT_HTML] = '<img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_{point_rate}p_1080s.jpg"width="100%">{original_html}'
-    if SessionStateKeys.START_TIME_STR not in st.session_state:
-        st.session_state[SessionStateKeys.START_TIME_STR] = "2025-10-24T20:00:00+09:00"
-    if SessionStateKeys.END_TIME_STR not in st.session_state:
-        st.session_state[SessionStateKeys.END_TIME_STR] = "2025-10-27T09:59:59+09:00"
-    if SessionStateKeys.FEATURE_TITLE not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_TITLE] = "{original_title}{campaign_code}"
-    if SessionStateKeys.FEATURE_HTML not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
-    if SessionStateKeys.NO_EVENT_HTML not in st.session_state:
-        st.session_state[SessionStateKeys.NO_EVENT_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
-    if SessionStateKeys.FEATURE_CAMPAIGN_CODE not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = ""
-    if SessionStateKeys.FEATURE_IDS not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_IDS] = ""
-    if "final_payloads" not in st.session_state:
-        st.session_state["final_payloads"] = []
+    init_session_state()
 
     # --- Upload Configuration Area ---
     render_config_uploader()
@@ -196,57 +262,15 @@ def show_page():
         no_event_html_format=no_event_html_format,
     )
 
+    # --- Generate Payloads ---
     if st.button("生成"):
-        # --- Get All Products ---
-        with st.spinner("正在從後台取得所有商品資料..."):
-            item_handler = ItemHandler(env_settings.auth_token)
-            all_items_raw = item_handler.search_item({}, page_size=10, max_page=1)
-            all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
-
-        flow = CampaignUpdateFlow()
-        final_payloads = flow.execute(
-            all_products=all_products,
-            config=campaign_config,
-            point_campaigns=point_campaigns,
-            feature_campaign=feature_campaign,
-        )
-        st.session_state["final_payloads"] = final_payloads
-
-        # --- Display Results ---
-        st.write("---")
-        st.subheader("生成結果")
-        st.json(json.dumps(final_payloads, indent=4, ensure_ascii=False), expanded=False)
+        generate_payloads(campaign_config, point_campaigns, feature_campaign)
 
     st.write("---")
     st.subheader("更新商品資訊")
+
     if st.button("執行商品更新"):
-        if not st.session_state["final_payloads"]:
-            st.warning("沒有可更新的商品資訊。請先點擊 '生成' 按鈕。")
-            return
-
-        item_handler = ItemHandler(env_settings.auth_token)
-        updated_count = 0
-        failed_updates = []
-
-        for item_id, item_data in st.session_state["final_payloads"].items():
-            try:
-                # Create a ProductData object with only the manage_number and the generated payload
-                # The to_patch_payload method will handle filtering None values
-                product_to_update = ProductData(
-                    manage_number=item_id,
-                    **item_data["generated_payload"]
-                )
-                item_handler.patch_item(product_to_update)
-                updated_count += 1
-            except Exception as e:
-                failed_updates.append(f"商品 {item_id} 更新失敗: {e}")
-
-        if updated_count > 0:
-            st.success(f"成功更新 {updated_count} 項商品！")
-        if failed_updates:
-            st.error("部分商品更新失敗:")
-            for error_msg in failed_updates:
-                st.write(error_msg)
+        execute_item_update()
 
     # --- Download Combined JSON ---
     st.subheader("下載設定檔")

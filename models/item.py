@@ -107,12 +107,12 @@ class ProductData(BaseModel):
     point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
     is_hidden: bool = False  # 倉庫指定
 
+    # TODO:自動產生別名
     customization_options: List[CustomizationOption] = Field(
         default_factory=list, alias="customizationOptions"
     )
 
     model_config = ConfigDict(populate_by_name=True)
-
 
     @classmethod
     def from_api(cls, data: dict) -> "ProductData":
