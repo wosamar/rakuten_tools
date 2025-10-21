@@ -1,5 +1,10 @@
+from datetime import date
+
 import streamlit as st
 import json
+
+from urllib3.exceptions import MaxRetryError
+
 from flows.campaign_update_flow import CampaignUpdateFlow, CampaignConfig
 from handlers.item_handler import ItemHandler
 from models.item import ProductData
@@ -58,8 +63,11 @@ def render_config_uploader():
     uploaded_config_file = st.file_uploader("上傳設定 JSON 檔案", type=["json"],
                                             help="上傳包含 config, point_campaigns, feature_campaign 的 JSON 檔案")
 
-    if uploaded_config_file is not None:
-        if st.button("載入設定檔"):
+
+    if st.button("載入設定檔"):
+        if uploaded_config_file is None:
+            st.warning("請先上傳設定檔")
+        else:
             try:
                 uploaded_data = json.load(uploaded_config_file)
                 if "config" in uploaded_data:
@@ -99,18 +107,24 @@ def render_config_uploader():
 
 def generate_payloads(campaign_config, point_campaigns, feature_campaign):
     # --- Get All Products ---
+    print("========================")
     with st.spinner("正在從後台取得所有商品資料..."):
-        item_handler = ItemHandler(env_settings.auth_token)
-        all_items_raw = item_handler.search_item({}, page_size=10, max_page=1)
-        all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
+        try:
+            item_handler = ItemHandler(env_settings.auth_token)
+            all_items_raw = item_handler.search_item({"updatedFrom":f"{date.today().year}-01-01"}, page_size=100, max_page=20)
+            all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
+            st.info(f"共取得 {len(all_products)} 筆商品")
+        except MaxRetryError:
+            st.error("連線超時，請再試一次")
 
-    flow = CampaignUpdateFlow()
-    final_payloads = flow.execute(
-        all_products=all_products,
-        config=campaign_config,
-        point_campaigns=point_campaigns,
-        feature_campaign=feature_campaign,
-    )
+    with st.spinner("正在生成Payload..."):
+        flow = CampaignUpdateFlow()
+        final_payloads = flow.execute(
+            all_products=all_products,
+            config=campaign_config,
+            point_campaigns=point_campaigns,
+            feature_campaign=feature_campaign,
+        )
     st.session_state["final_payloads"] = final_payloads
 
     # --- Display Results ---
