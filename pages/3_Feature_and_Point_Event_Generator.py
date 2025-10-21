@@ -34,32 +34,33 @@ def render_config_uploader():
                                             help="上傳包含 config, point_campaigns, feature_campaign 的 JSON 檔案")
 
     if uploaded_config_file is not None:
-        try:
-            uploaded_data = json.load(uploaded_config_file)
-            if "config" in uploaded_data:
-                st.session_state[SessionStateKeys.POINT_TITLE] = uploaded_data["config"].get("point_title_format", "")
-                st.session_state[SessionStateKeys.POINT_HTML] = uploaded_data["config"].get("point_html_format", "")
-                st.session_state[SessionStateKeys.START_TIME_STR] = uploaded_data["config"].get("start_time", "")
-                st.session_state[SessionStateKeys.END_TIME_STR] = uploaded_data["config"].get("end_time", "")
-                st.session_state[SessionStateKeys.FEATURE_TITLE] = uploaded_data["config"].get("feature_title_format", "")
-                st.session_state[SessionStateKeys.FEATURE_HTML] = uploaded_data["config"].get("feature_html_format", "")
-                st.session_state[SessionStateKeys.NO_EVENT_HTML] = uploaded_data["config"].get("no_event_html_format", "")
+        if st.button("載入設定檔"):
+            try:
+                uploaded_data = json.load(uploaded_config_file)
+                if "config" in uploaded_data:
+                    st.session_state[SessionStateKeys.POINT_TITLE] = uploaded_data["config"].get("point_title_format", "")
+                    st.session_state[SessionStateKeys.POINT_HTML] = uploaded_data["config"].get("point_html_format", "")
+                    st.session_state[SessionStateKeys.START_TIME_STR] = uploaded_data["config"].get("start_time", "")
+                    st.session_state[SessionStateKeys.END_TIME_STR] = uploaded_data["config"].get("end_time", "")
+                    st.session_state[SessionStateKeys.FEATURE_TITLE] = uploaded_data["config"].get("feature_title_format", "")
+                    st.session_state[SessionStateKeys.FEATURE_HTML] = uploaded_data["config"].get("feature_html_format", "")
+                    st.session_state[SessionStateKeys.NO_EVENT_HTML] = uploaded_data["config"].get("no_event_html_format", "")
 
-            if "point_campaigns" in uploaded_data:
-                for i, campaign in enumerate(uploaded_data["point_campaigns"]):
-                    key_suffix = str(i + 1)
-                    st.session_state[SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(key_suffix)] = campaign.get("point_rate", 0)
-                    st.session_state[SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(key_suffix)] = "\n".join(campaign.get("items", []))
+                if "point_campaigns" in uploaded_data:
+                    for i, campaign in enumerate(uploaded_data["point_campaigns"]):
+                        key_suffix = str(i + 1)
+                        st.session_state[SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(key_suffix)] = campaign.get("point_rate", 0)
+                        st.session_state[SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(key_suffix)] = "\n".join(campaign.get("items", []))
 
-            if "feature_campaign" in uploaded_data:
-                st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = uploaded_data["feature_campaign"].get("campaign_code", "")
-                st.session_state[SessionStateKeys.FEATURE_IDS] = "\n".join(uploaded_data["feature_campaign"].get("items", []))
+                if "feature_campaign" in uploaded_data:
+                    st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = uploaded_data["feature_campaign"].get("campaign_code", "")
+                    st.session_state[SessionStateKeys.FEATURE_IDS] = "\n".join(uploaded_data["feature_campaign"].get("items", []))
 
-            st.success("設定檔已成功載入！")
-        except json.JSONDecodeError:
-            st.error("無效的 JSON 檔案格式。")
-        except Exception as e:
-            st.error(f"載入設定檔時發生錯誤: {e}")
+                st.success("設定檔已成功載入！")
+            except json.JSONDecodeError:
+                st.error("無效的 JSON 檔案格式。")
+            except Exception as e:
+                st.error(f"載入設定檔時發生錯誤: {e}")
 
 
 def show_page():
@@ -216,6 +217,37 @@ def show_page():
         st.subheader("生成結果")
         st.json(json.dumps(final_payloads, indent=4, ensure_ascii=False), expanded=False)
 
+    st.write("---")
+    st.subheader("更新商品資訊")
+    if st.button("執行商品更新"):
+        if not st.session_state["final_payloads"]:
+            st.warning("沒有可更新的商品資訊。請先點擊 '生成' 按鈕。")
+            return
+
+        item_handler = ItemHandler(env_settings.auth_token)
+        updated_count = 0
+        failed_updates = []
+
+        for item_id, item_data in st.session_state["final_payloads"].items():
+            try:
+                # Create a ProductData object with only the manage_number and the generated payload
+                # The to_patch_payload method will handle filtering None values
+                product_to_update = ProductData(
+                    manage_number=item_id,
+                    **item_data["generated_payload"]
+                )
+                item_handler.patch_item(product_to_update)
+                updated_count += 1
+            except Exception as e:
+                failed_updates.append(f"商品 {item_id} 更新失敗: {e}")
+
+        if updated_count > 0:
+            st.success(f"成功更新 {updated_count} 項商品！")
+        if failed_updates:
+            st.error("部分商品更新失敗:")
+            for error_msg in failed_updates:
+                st.write(error_msg)
+
     # --- Download Combined JSON ---
     st.subheader("下載設定檔")
     combined_data = {
@@ -230,30 +262,6 @@ def show_page():
         file_name="campaign_settings.json",
         mime="application/json"
     )
-
-    # --- Download CSV ---
-    # if st.session_state["final_payloads"]:
-        # csv_mapper = CsvColumnMapper()
-        # csv_headers = csv_mapper.get_csv_headers()
-        # csv_output = io.StringIO()
-        # csv_writer = csv.writer(csv_output)
-        # csv_writer.writerow(csv_headers)
-        #
-        # for payload in st.session_state["final_payloads"]:
-        #     # Assuming each payload in final_payloads is a dictionary containing the necessary fields
-        #     # The CsvColumnMapper expects a dictionary with keys like 'item_id', 'item_name', etc.
-        #     # We need to extract these from the payload structure.
-        #     # For simplicity, let's assume payload itself contains these keys directly or can be flattened.
-        #     # If the structure is nested, we'd need more complex extraction logic here.
-        #     csv_row_data = csv_mapper.map_product_to_csv_row(payload)
-        #     csv_writer.writerow(list(csv_row_data.values()))
-
-        # st.download_button(
-        #     label="下載結果 CSV",
-        #     data=csv_output.getvalue(),
-        #     file_name="campaign_results.csv",
-        #     mime="text/csv"
-        # )
 
 
 if __name__ == '__main__':

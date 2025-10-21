@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 
 class ProductImage(BaseModel):
@@ -108,8 +108,11 @@ class ProductData(BaseModel):
     is_hidden: bool = False  # 倉庫指定
 
     customization_options: List[CustomizationOption] = Field(
-        default_factory=list  # , alias="customizationOptions"
+        default_factory=list, alias="customizationOptions"
     )
+
+    model_config = ConfigDict(populate_by_name=True)
+
 
     @classmethod
     def from_api(cls, data: dict) -> "ProductData":

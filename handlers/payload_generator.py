@@ -79,32 +79,76 @@ class CampaignPayloadGenerator:
         # 6. Combine the frame and the trimmed title
         return self.title_format.format(original_title=trimmed_original_title, **kwargs)
 
+    def _apply_format_if_needed(
+        self,
+        original_content: str,
+        format_string: str,
+        placeholder: str,
+        formatter_func=None, # For titles, this will be _generate_and_trim_title
+        **kwargs
+    ) -> str:
+        """
+        Checks if original_content already contains the formatted prefix/suffix.
+        If so, returns original_content. Otherwise, applies the format_string.
+        """
+        if not format_string:
+            return original_content
+
+        parts = re.split(re.escape(placeholder), format_string)
+        prefix_template = parts[0]
+        suffix_template = parts[1] if len(parts) > 1 else ""
+
+        # Create a temporary kwargs dict without the placeholder to format prefix/suffix
+        temp_kwargs = {k: v for k, v in kwargs.items() if k != placeholder.strip("{}")}
+        
+        actual_prefix = prefix_template.format(**temp_kwargs)
+        actual_suffix = suffix_template.format(**temp_kwargs)
+
+        if original_content.startswith(actual_prefix) and original_content.endswith(actual_suffix):
+            return original_content
+        else:
+            if formatter_func:
+                return formatter_func(original_title=original_content, **kwargs)
+            else:
+                return format_string.format(original_html=original_content, **kwargs)
+
     def generate(self, product_data: ProductData, **kwargs) -> dict:
         """
         Generates the update payload for a given product.
         """
         payload = {}
-        # TODO:防呆，檢查原字串，防止重複加入字串
 
-        # Format Title and trim it
+        original_title_content = product_data.title or ""
+        original_sp_html_content = product_data.product_description.sp if product_data.product_description else ""
+        original_pc_sales_html_content = product_data.sales_description or ""
+
+        # --- Title Duplication Check and Formatting ---
         if self.title_format:
-            payload["title"] = self._generate_and_trim_title(
-                original_title=product_data.title or "", **kwargs
+            payload["title"] = self._apply_format_if_needed(
+                original_content=original_title_content,
+                format_string=self.title_format,
+                placeholder="{original_title}",
+                formatter_func=self._generate_and_trim_title,
+                **kwargs
             )
 
-        # Format HTML content
+        # --- HTML Content Duplication Check and Formatting ---
         if self.html_format:
             # For smartphone description
-            original_sp_html = ""
-            if product_data.product_description:
-                original_sp_html = product_data.product_description.sp or ""
-            new_sp_html = self.html_format.format(original_html=original_sp_html, **kwargs)
+            new_sp_html = self._apply_format_if_needed(
+                original_content=original_sp_html_content,
+                format_string=self.html_format,
+                placeholder="{original_html}",
+                **kwargs
+            )
             payload["productDescription"] = {"sp": new_sp_html}
 
             # For PC sales description
-            original_pc_sales_html = product_data.sales_description or ""
-            new_pc_sales_html = self.html_format.format(
-                original_html=original_pc_sales_html, **kwargs
+            new_pc_sales_html = self._apply_format_if_needed(
+                original_content=original_pc_sales_html_content,
+                format_string=self.html_format,
+                placeholder="{original_html}",
+                **kwargs
             )
             payload["salesDescription"] = new_pc_sales_html
 
