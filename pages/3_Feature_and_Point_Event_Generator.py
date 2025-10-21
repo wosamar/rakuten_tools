@@ -179,9 +179,11 @@ def show_page():
 
     # --- Template Input Area ---
     st.subheader("模板輸入")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("#### 點數活動")
+
+    tab_point, tab_feature, tab_no_event = st.tabs(["點數活動", "特輯活動", "無活動"])
+
+    with tab_point:
+        st.markdown("#### 點數活動設定")
         point_title_format = st.text_input(
             "標題模板",
             key=SessionStateKeys.POINT_TITLE
@@ -194,8 +196,35 @@ def show_page():
         start_time_str = st.text_input("開始時間", key=SessionStateKeys.START_TIME_STR)
         end_time_str = st.text_input("結束時間", key=SessionStateKeys.END_TIME_STR)
 
-    with col2:
-        st.markdown("#### 特輯活動")
+        st.write("---")
+        st.markdown("#### 點數活動商品清單")
+        p_col1, p_col2, p_col3, p_col4 = st.columns(4)
+        point_campaigns_inputs = [
+            {"col": p_col1, "key_suffix": "1", "default_points": 5},
+            {"col": p_col2, "key_suffix": "2", "default_points": 10},
+            {"col": p_col3, "key_suffix": "3", "default_points": 15},
+            {"col": p_col4, "key_suffix": "4", "default_points": 20},
+        ]
+
+        for config in point_campaigns_inputs:
+            with config["col"]:
+                st.markdown(f"##### 點數活動商品清單 {config['key_suffix']}")
+                points_key = SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(config['key_suffix'])
+                if points_key not in st.session_state:
+                    st.session_state[points_key] = config["default_points"]
+                config["point_rate"] = st.number_input(
+                    "點數",
+                    key=points_key,
+                    min_value=1,
+                    step=5
+                )
+                ids_key = SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(config['key_suffix'])
+                if ids_key not in st.session_state:
+                    st.session_state[ids_key] = ""
+                config["items"] = st.text_area("ID列表", key=ids_key, height=300)
+
+    with tab_feature:
+        st.markdown("#### 特輯活動設定")
         feature_title_format = st.text_input(
             "標題模板",
             key=SessionStateKeys.FEATURE_TITLE
@@ -205,48 +234,18 @@ def show_page():
             key=SessionStateKeys.FEATURE_HTML,
             height=200
         )
-        st.markdown("#### 無活動商品")
+        st.write("---")
+        st.markdown("#### 特輯商品清單")
+        feature_campaign_code = st.text_input("活動代號", key=SessionStateKeys.FEATURE_CAMPAIGN_CODE)
+        feature_item_list = st.text_area("ID列表", key=SessionStateKeys.FEATURE_IDS)
+
+    with tab_no_event:
+        st.markdown("#### 無活動商品設定")
         no_event_html_format = st.text_area(
             "HTML模板",
             key=SessionStateKeys.NO_EVENT_HTML,
             height=200
         )
-
-    # --- Item List Input Area ---
-    st.subheader("商品清單輸入")
-    st.write("---")
-    st.write("點數活動商品清單")
-    p_col1, p_col2, p_col3, p_col4 = st.columns(4)
-    point_campaigns_inputs = [
-        {"col": p_col1, "key_suffix": "1", "default_points": 5},
-        {"col": p_col2, "key_suffix": "2", "default_points": 10},
-        {"col": p_col3, "key_suffix": "3", "default_points": 15},
-        {"col": p_col4, "key_suffix": "4", "default_points": 20},
-    ]
-
-    for config in point_campaigns_inputs:
-        with config["col"]:
-            st.markdown(f"##### 點數活動商品清單 {config['key_suffix']}")
-            # Initialize session state for points if not present
-            points_key = SessionStateKeys.POINT_CAMPAIGN_POINTS_PREFIX.format(config['key_suffix'])
-            if points_key not in st.session_state:
-                st.session_state[points_key] = config["default_points"]
-            config["point_rate"] = st.number_input(
-                "點數",
-                key=points_key,
-                min_value=1,
-                step=5
-            )
-            # Initialize session state for items if not present
-            ids_key = SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(config['key_suffix'])
-            if ids_key not in st.session_state:
-                st.session_state[ids_key] = ""
-            config["items"] = st.text_area("ID列表", key=ids_key, height=300)
-
-    st.write("---")
-    st.write("特輯商品清單")
-    feature_campaign_code = st.text_input("活動代號", key=SessionStateKeys.FEATURE_CAMPAIGN_CODE)
-    feature_item_list = st.text_area("ID列表", key=SessionStateKeys.FEATURE_IDS)
 
     # --- Collect Point Campaigns ---
     point_campaigns = []

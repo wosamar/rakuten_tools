@@ -17,6 +17,29 @@ class CampaignConfig(BaseModel):
     feature_html_format: str
     no_event_html_format: Optional[str] = None
 
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        # Process point_title_format
+        if "{original_title}" not in self.point_title_format:
+            self.point_title_format += " {original_title}"
+
+        # Process point_html_format
+        if "{original_html}" not in self.point_html_format:
+            self.point_html_format += "{original_html}"
+
+        # Process feature_title_format
+        if "{original_title}" not in self.feature_title_format:
+            self.feature_title_format = "{original_title}" + self.feature_title_format
+
+        # Process feature_html_format
+        if "{original_html}" not in self.feature_html_format:
+            self.feature_html_format += "{original_html}"
+
+        # Process no_event_html_format
+        if self.no_event_html_format and "{original_html}" not in self.no_event_html_format:
+            self.no_event_html_format += "{original_html}"
+
 
 class CampaignUpdateFlow:
     """
