@@ -128,10 +128,10 @@ class ProductData(BaseModel):
             sp_desc = data.get("descriptionForSmartPhone", "")
 
         # Handle different title fields
-        title = data.get("title") or data.get("itemName", "")
+        title = data.get("title")
 
         # Handle different hidden flags
-        is_hidden = data.get("hideItem", data.get("isHiddenItem", False))
+        is_hidden = data.get("isHiddenItem", False)
 
         # Use salesDescription if present, else fallback to pc_desc
         sales_desc = data.get("salesDescription") or pc_desc
@@ -205,20 +205,20 @@ class ProductData(BaseModel):
             payload["customizationOptions"] = [opt.to_api() for opt in self.customization_options]
         return payload
 
-    def to_csv_dict(self) -> dict:
+    def to_csv(self) -> dict:
         """
         Returns a dictionary of product data flattened for CSV output.
         """
         csv_data = {
-            "manage_number": self.manage_number,
-            "item_number": self.item_number or "",
-            "title": self.title or "",
-            "standard_price": self.standard_price or 0,
-            "product_description_pc": self.product_description.pc if self.product_description else "",
-            "product_description_sp": self.product_description.sp if self.product_description else "",
-            "sales_description": self.sales_description or "",
-            "point_rate": self.point_campaign.benefits.point_rate if self.point_campaign and self.point_campaign.benefits else 0,
-            "start_time": self.point_campaign.applicable_period.start if self.point_campaign and self.point_campaign.applicable_period else "",
-            "end_time": self.point_campaign.applicable_period.end if self.point_campaign and self.point_campaign.applicable_period else "",
+            "商品管理番号（商品URL）": self.manage_number,
+            "商品番号": self.item_number or "",
+            "商品名": self.title or "",
+            "通常購入販売価格": self.standard_price or 0,
+            "PC用商品説明文": self.product_description.pc if self.product_description else "",
+            "スマートフォン用商品説明文": self.product_description.sp if self.product_description else "",
+            "PC用販売説明文": self.sales_description or "",
+            "ポイント変倍率": self.point_campaign.benefits.point_rate if self.point_campaign and self.point_campaign.benefits else 0,
+            "ポイント変倍率適用期間（開始日時）": self.point_campaign.applicable_period.start if self.point_campaign and self.point_campaign.applicable_period else "",
+            "ポイント変倍率適用期間（終了日時）": self.point_campaign.applicable_period.end if self.point_campaign and self.point_campaign.applicable_period else "",
         }
         return csv_data
