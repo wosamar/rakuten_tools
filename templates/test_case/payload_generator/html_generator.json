@@ -1,0 +1,75 @@
+[
+  {
+    "case": "Simple HTML formatting",
+    "input": {
+      "html_format": "<div class='campaign'>{original_html}</div>",
+      "product_data": {
+        "manage_number": "test-item",
+        "product_description": {
+          "sp": "<p>This is SP description.</p>"
+        },
+        "sales_description": "This is sales description."
+      },
+      "kwargs": {}
+    },
+    "output": {
+      "productDescription": {
+        "sp": "<div class='campaign'><p>This is SP description.</p></div>"
+      },
+      "salesDescription": "<div class='campaign'>This is sales description.</div>"
+    }
+  },
+  {
+    "case": "HTML already formatted",
+    "input": {
+      "html_format": "<div class='campaign'>{original_html}</div>",
+      "product_data": {
+        "manage_number": "test-item",
+        "product_description": {
+          "sp": "<div class='campaign'><p>This is SP description.</p></div>"
+        },
+        "sales_description": "<div class='campaign'>This is sales description.</div>"
+      },
+      "kwargs": {}
+    },
+    "output": {
+      "productDescription": {
+        "sp": "<div class='campaign'><p>This is SP description.</p></div>"
+      },
+      "salesDescription": "<div class='campaign'>This is sales description.</div>"
+    }
+  },
+  {
+    "case": "Missing description parts",
+    "input": {
+      "html_format": "<div class='campaign'>{original_html}</div>",
+      "product_data": {
+        "manage_number": "test-item",
+        "product_description": null,
+        "sales_description": "This is sales description."
+      },
+      "kwargs": {}
+    },
+    "output": {
+      "productDescription": {
+        "sp": "<div class='campaign'></div>"
+      },
+      "salesDescription": "<div class='campaign'>This is sales description.</div>"
+    }
+  },
+  {
+    "case": "No html_format provided",
+    "input": {
+      "html_format": null,
+      "product_data": {
+        "manage_number": "test-item",
+        "product_description": {
+          "sp": "<p>This is SP description.</p>"
+        },
+        "sales_description": "This is sales description."
+      },
+      "kwargs": {}
+    },
+    "output": {}
+  }
+]

@@ -1,0 +1,113 @@
+[
+  {
+    "case": "Simple title formatting",
+    "input": {
+      "title_format": "【SALE】{original_title} ポイント{point_rate}倍",
+      "original_title_content": "これはテスト商品です",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {
+      "title": "【SALE】これはテスト商品です ポイント10倍"
+    }
+  },
+  {
+    "case": "Title needs trimming (half-width chars)",
+    "input": {
+      "title_format": "PREFIX {original_title} SUFFIX",
+      "original_title_content": "a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z",
+      "max_width": 21,
+      "kwargs": {}
+    },
+    "output": {
+      "title": "PREFIX a b c d SUFFIX"
+    }
+  },
+  {
+    "case": "Title needs trimming (full-width chars with brackets)",
+    "input": {
+      "title_format": "PREFIX {original_title} SUFFIX",
+      "original_title_content": "【送料無料】あいうえお かきくけこ さしすせそ たちつてと なにぬねの はひふへほ まみむめも やゆよ らりるれろ わをん あいうえお かきくけこ さしすせそ たちつてと なにぬねの はひふへほ まみむめも やゆよ らりるれろ わをん あいうえお かきくけこ さしすせそ たちつてと なにぬねの はひふへほ まみむめも やゆよ らりるれろ わをん",
+      "max_width": 50,
+      "kwargs": {}
+    },
+    "output": {
+      "title": "PREFIX 【送料無料】あいうえお かきくけこ SUFFIX"
+    }
+  },
+  {
+    "case": "Title already formatted",
+    "input": {
+      "title_format": "【SALE】{original_title}event25",
+      "original_title_content": "【SALE】これはテスト商品ですevent25",
+      "kwargs": {}
+    },
+    "output": {
+      "title": "【SALE】これはテスト商品ですevent25"
+    }
+  },
+  {
+    "case": "Title with point already formatted",
+    "input": {
+      "title_format": "【SALE】{point_rate} point back {original_title}",
+      "original_title_content": "【SALE】10 point back これはテスト商品です",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {
+      "title": "【SALE】10 point back これはテスト商品です"
+    }
+  },
+  {
+    "case": "No title_format provided",
+    "input": {
+      "title_format": null,
+      "original_title_content": "これはテスト商品です",
+      "kwargs": {}
+    },
+    "output": {}
+  },
+  {
+    "case": "Title with point rate and custom max width",
+    "input": {
+      "title_format": "【SALE】{original_title} ポイント{point_rate}倍",
+      "original_title_content": "これは 非常に 長い テスト 商品名 です ポイント キャンペーン と 組み合わせて さらに 長い タイトル に なります この タイトル は 指定された 最大幅に 収まるように トリミング されるべきです",
+      "max_width": 132,
+      "kwargs": {
+        "point_rate": 5
+
+      }
+    },
+    "output": {
+      "title": "【SALE】これは 非常に 長い テスト 商品名 です ポイント キャンペーン と 組み合わせて さらに 長い タイトル に なります ポイント5倍"
+    }
+  },
+  {
+    "case": "Original title is blank",
+    "input": {
+      "title_format": "【SALE】{original_title} ポイント{point_rate}倍",
+      "original_title_content": "",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {
+      "title": "【SALE】 ポイント10倍"
+    }
+  },
+  {
+    "case": "No format string for title",
+    "input": {
+      "title_format": "【SALE】 ポイント{point_rate}倍",
+      "original_title_content": "原標題",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {
+      "title": "【SALE】 ポイント10倍"
+    }
+  }
+]

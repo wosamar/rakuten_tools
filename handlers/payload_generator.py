@@ -8,6 +8,7 @@ class BaseContentGenerator:
     """
     Base class for content generators, providing common utility methods.
     """
+
     @staticmethod
     def _get_display_width(text: str) -> int:
         width = 0
@@ -19,12 +20,12 @@ class BaseContentGenerator:
         return width
 
     def _apply_format_if_needed(
-        self,
-        original_content: str,
-        format_string: str,
-        placeholder: str,
-        formatter_func=None,
-        **kwargs
+            self,
+            original_content: str,
+            format_string: str,
+            placeholder: str,
+            formatter_func=None,
+            **kwargs
     ) -> str:
         """
         Checks if original_content already contains the formatted prefix/suffix.
@@ -33,33 +34,39 @@ class BaseContentGenerator:
         if not format_string:
             return original_content
 
+        processed_content = original_content
+        if formatter_func:
+            processed_content = formatter_func(original_content=original_content, **kwargs)
+
+
+
+        # Define actual_prefix and actual_suffix here, before they are used
         parts = re.split(re.escape(placeholder), format_string)
         prefix_template = parts[0]
         suffix_template = parts[1] if len(parts) > 1 else ""
 
         temp_kwargs = {k: v for k, v in kwargs.items() if k != placeholder.strip("{}")}
-        
+
         actual_prefix = prefix_template.format(**temp_kwargs)
         actual_suffix = suffix_template.format(**temp_kwargs)
 
-        if original_content.startswith(actual_prefix) and original_content.endswith(actual_suffix):
-            return original_content
+        if processed_content.startswith(actual_prefix) and processed_content.endswith(actual_suffix):
+            return processed_content
         else:
-            if formatter_func:
-                return formatter_func(original_content=original_content, **kwargs)
-            else:
-                return format_string.format(original_html=original_content, **kwargs)
+            return format_string.format(original_title=processed_content, original_html=processed_content, **kwargs)
 
 
 class TitleGenerator(BaseContentGenerator):
     """
     Generates and trims product titles based on a format string.
     """
-    def __init__(self, title_format: Optional[str] = None):
+
+    def __init__(self, title_format: Optional[str] = None, max_width: int = 255):
         self.title_format = title_format
+        self.max_width = max_width
 
     def _generate_and_trim_title(
-        self, original_content: str, max_width: int = 255, **kwargs
+            self, original_content: str, **kwargs
     ) -> str:
         """
         Generates a title by first trimming the original_content to fit within
@@ -69,42 +76,46 @@ class TitleGenerator(BaseContentGenerator):
         if not self.title_format:
             return original_content
 
-        # 1. Extract bracketed text
-        bracketed_texts = re.findall(r'【.*?】', original_content)
-        
-        # Create a version of the original title without bracketed texts for width calculation and trimming
-        original_title_without_brackets_for_trimming = original_content
-        for bracketed_text in bracketed_texts:
-            original_title_without_brackets_for_trimming = original_title_without_brackets_for_trimming.replace(bracketed_text, '')
+        # 1. Extract bracketed text and replace with placeholders
+        bracketed_texts_map = {}
+        placeholder_counter = 0
+        def replace_bracketed(match):
+            nonlocal placeholder_counter
+            placeholder = f"__BRACKET_{placeholder_counter}__"
+            bracketed_texts_map[placeholder] = match.group(0)
+            placeholder_counter += 1
+            return placeholder
+
+        content_with_placeholders = re.sub(r'【.*?】', replace_bracketed, original_content)
 
         # 2. Calculate the width of the "frame" (the format string without original_title)
-        #    by substituting all other placeholders.
         temp_title_for_frame = self.title_format.replace("{original_title}", "")
         frame_text = temp_title_for_frame.format(original_title="", **kwargs)
         frame_width = self._get_display_width(frame_text)
 
-        # 3. Determine the max allowed width for the original title (excluding bracketed text)
-        bracketed_width = sum(self._get_display_width(text) for text in bracketed_texts)
-        allowed_title_width = max_width - frame_width - bracketed_width
+        # 3. Determine the max allowed width for the original title (including placeholders)
+        allowed_title_width = self.max_width - frame_width
 
-        # 4. Trim the original title itself (only the non-bracketed parts)
-        trimmed_original_title_without_brackets = original_title_without_brackets_for_trimming
-        words = trimmed_original_title_without_brackets.split(' ')
+        # 4. Trim the content with placeholders
+        trimmed_content_with_placeholders = content_with_placeholders
+        words = trimmed_content_with_placeholders.split(' ')
         current_width = self._get_display_width(' '.join(words))
+
         while current_width > allowed_title_width:
             if not words:
                 break
             words.pop()
             current_width = self._get_display_width(' '.join(words))
-        trimmed_original_title_without_brackets = ' '.join(words)
+            # print(f"  After pop - current_width: {current_width}, words: {words}")
+        trimmed_content_with_placeholders = ' '.join(words)
 
-        # 5. Reconstruct the title with bracketed texts
-        trimmed_original_title = trimmed_original_title_without_brackets
-        for bracketed_text in bracketed_texts:
-            trimmed_original_title += bracketed_text
+        # 5. Reconstruct the title by replacing placeholders with original bracketed texts
+        trimmed_original_title = trimmed_content_with_placeholders
+        for placeholder, original_text in bracketed_texts_map.items():
+            trimmed_original_title = trimmed_original_title.replace(placeholder, original_text)
 
-        # 6. Combine the frame and the trimmed title
-        return self.title_format.format(original_title=trimmed_original_title, **kwargs)
+        # 6. Return only the trimmed content, without applying the format string yet
+        return trimmed_original_title
 
     def generate_title_payload(self, original_title_content: str, **kwargs) -> Dict:
         payload = {}
@@ -123,6 +134,7 @@ class HtmlGenerator(BaseContentGenerator):
     """
     Generates HTML content for product descriptions and sales descriptions.
     """
+
     def __init__(self, html_format: Optional[str] = None):
         self.html_format = html_format
 
@@ -154,10 +166,11 @@ class PointCampaignGenerator:
     """
     Generates the payload for point campaign information.
     """
+
     def __init__(
-        self,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+            self,
+            start_time: Optional[str] = None,
+            end_time: Optional[str] = None,
     ):
         self.start_time = start_time
         self.end_time = end_time
@@ -177,14 +190,16 @@ class CampaignPayloadGenerator:
     Orchestrates the generation of a complete product update payload
     by delegating to specialized generators.
     """
+
     def __init__(
             self,
             title_format: Optional[str] = None,
             html_format: Optional[str] = None,
             start_time: Optional[str] = None,
             end_time: Optional[str] = None,
+            max_width: int = 255
     ):
-        self.title_generator = TitleGenerator(title_format)
+        self.title_generator = TitleGenerator(title_format, max_width)
         self.html_generator = HtmlGenerator(html_format)
         self.point_campaign_generator = PointCampaignGenerator(start_time, end_time)
 

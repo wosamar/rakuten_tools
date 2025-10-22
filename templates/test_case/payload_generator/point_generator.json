@@ -1,0 +1,54 @@
+[
+  {
+    "case": "Successful point campaign generation",
+    "input": {
+      "start_time": "2025-10-24T20:00:00+09:00",
+      "end_time": "2025-10-27T09:59:59+09:00",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {
+      "pointCampaign": {
+        "applicablePeriod": {
+          "start": "2025-10-24T20:00:00+09:00",
+          "end": "2025-10-27T09:59:59+09:00"
+        },
+        "benefits": {
+          "pointRate": 10
+        }
+      }
+    }
+  },
+  {
+    "case": "Missing point_rate",
+    "input": {
+      "start_time": "2025-10-24T20:00:00+09:00",
+      "end_time": "2025-10-27T09:59:59+09:00",
+      "kwargs": {}
+    },
+    "output": {}
+  },
+  {
+    "case": "Missing start_time",
+    "input": {
+      "start_time": null,
+      "end_time": "2025-10-27T09:59:59+09:00",
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {}
+  },
+  {
+    "case": "Missing end_time",
+    "input": {
+      "start_time": "2025-10-24T20:00:00+09:00",
+      "end_time": null,
+      "kwargs": {
+        "point_rate": 10
+      }
+    },
+    "output": {}
+  }
+]
