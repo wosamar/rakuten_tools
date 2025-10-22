@@ -1,0 +1,154 @@
+{
+  "input": {
+    "all_products": [
+      {
+        "manage_number": "no_event_item",
+        "title": "ne_original_title",
+        "sales_description": "ne_original_sales_html",
+        "product_description": {
+          "sp": "ne_original_html"
+        },
+        "is_hidden": false
+      },
+      {
+        "manage_number": "5_point_item",
+        "title": "5p_original_title",
+        "sales_description": "5p_original_sales_html",
+        "product_description": {
+          "sp": "5p_original_html"
+        },
+        "is_hidden": false
+      },
+      {
+        "manage_number": "10_point_item",
+        "title": "10p_original_title",
+        "sales_description": "10p_original_sales_html",
+        "product_description": {
+          "sp": "10p_original_html"
+        },
+        "is_hidden": false
+      },
+      {
+        "manage_number": "feature_item",
+        "title": "f_original_title",
+        "sales_description": "f_original_sales_html",
+        "product_description": {
+          "sp": "f_original_html"
+        },
+        "is_hidden": false
+      },
+      {
+        "manage_number": "point_and_feature_item",
+        "title": "pf_original_title",
+        "sales_description": "pf_original_sales_html",
+        "product_description": {
+          "sp": "pf_original_html"
+        },
+        "is_hidden": false
+      },
+      {
+        "manage_number": "hidden_item",
+        "title": "h_original_title",
+        "sales_description": "h_original_sales_html",
+        "product_description": {
+          "sp": "h_original_html"
+        },
+        "is_hidden": true
+      }
+    ],
+    "config": {
+      "point_title_format": "point_title_prefix {point_rate}_point {original_title}",
+      "point_html_format": "point_html_prefix {point_rate}_point{original_html}",
+      "start_time": "2025-10-24T20:00:00+09:00",
+      "end_time": "2025-10-27T09:59:59+09:00",
+      "feature_title_format": "{original_title}{campaign_code}",
+      "feature_html_format": "feature_html_prefix{original_html}",
+      "no_event_html_format": "feature_html_prefix{original_html}"
+    },
+    "point_campaigns": [
+      {
+        "point_rate": 5,
+        "items": [
+          "5_point_item",
+          "point_and_feature_item"
+        ]
+      },
+      {
+        "point_rate": 10,
+        "items": [
+          "10_point_item"
+        ]
+      }
+    ],
+    "feature_campaign": {
+      "campaign_code": "feature_campaign_code",
+      "items": [
+        "feature_item",
+        "point_and_feature_item"
+      ]
+    }
+  },
+  "out_put": {
+    "point_and_feature_item": {
+      "title": "point_title_prefix 5_point pf_original_titlefeature_campaign_code",
+      "productDescription": {
+        "sp": "point_html_prefix 5_pointpf_original_html"
+      },
+      "salesDescription": "point_html_prefix 5_pointpf_original_sales_html",
+      "pointCampaign": {
+        "applicablePeriod": {
+          "start": "2025-10-24T20:00:00+09:00",
+          "end": "2025-10-27T09:59:59+09:00"
+        },
+        "benefits": {
+          "pointRate": 5
+        }
+      }
+    },
+    "5_point_item": {
+      "title": "point_title_prefix 5_point 5p_original_title",
+      "productDescription": {
+        "sp": "point_html_prefix 5_point5p_original_html"
+      },
+      "salesDescription": "point_html_prefix 5_point5p_original_sales_html",
+      "pointCampaign": {
+        "applicablePeriod": {
+          "start": "2025-10-24T20:00:00+09:00",
+          "end": "2025-10-27T09:59:59+09:00"
+        },
+        "benefits": {
+          "pointRate": 5
+        }
+      }
+    },
+    "10_point_item": {
+      "title": "point_title_prefix 10_point 10p_original_title",
+      "productDescription": {
+        "sp": "point_html_prefix 10_point10p_original_html"
+      },
+      "salesDescription": "point_html_prefix 10_point10p_original_sales_html",
+      "pointCampaign": {
+        "applicablePeriod": {
+          "start": "2025-10-24T20:00:00+09:00",
+          "end": "2025-10-27T09:59:59+09:00"
+        },
+        "benefits": {
+          "pointRate": 10
+        }
+      }
+    },
+    "feature_item": {
+      "title": "f_original_titlefeature_campaign_code",
+      "productDescription": {
+        "sp": "feature_html_prefixf_original_html"
+      },
+      "salesDescription": "feature_html_prefixf_original_sales_html"
+    },
+    "no_event_item": {
+      "productDescription": {
+        "sp": "feature_html_prefixne_original_html"
+      },
+      "salesDescription": "feature_html_prefixne_original_sales_html"
+    }
+  }
+}

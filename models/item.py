@@ -10,8 +10,8 @@ class ProductImage(BaseModel):
 
 
 class ProductDescription(BaseModel):
-    pc: Optional[str]  # PC用商品説明文(pc_main)
-    sp: Optional[str]  # スマートフォン用商品説明文(mobile)
+    pc: Optional[str] = None  # PC用商品説明文(pc_main)
+    sp: Optional[str] = None  # スマートフォン用商品説明文(mobile)
 
 
 # === Customization 定義 ===
@@ -97,7 +97,7 @@ class ProductData(BaseModel):
     item_number: Optional[str] = None  # 商品番号
     title: Optional[str] = None  # 商品名
     tagline: Optional[str] = None
-    product_description: Optional[ProductDescription] = None
+    product_description: Optional[ProductDescription] = None  # 其他說明文
     sales_description: Optional[str] = None  # PC用販売説明文(pc_sub)
     images: List[ProductImage] = Field(default_factory=list)
     genre_id: Optional[str] = None
