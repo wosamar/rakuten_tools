@@ -86,7 +86,9 @@ class TitleGenerator(BaseContentGenerator):
             placeholder_counter += 1
             return placeholder
 
-        content_with_placeholders = re.sub(r'【.*?】', replace_bracketed, original_content)
+        # Add a space before 【 to separate it from the previous word, if there's no space.
+        content_with_space_before_bracket = re.sub(r'([^\s])(【)', r'\1 \2', original_content)
+        content_with_placeholders = re.sub(r'【.*?】', replace_bracketed, content_with_space_before_bracket)
 
         # 2. Calculate the width of the "frame" (the format string without original_title)
         temp_title_for_frame = self.title_format.replace("{original_title}", "")
@@ -96,17 +98,36 @@ class TitleGenerator(BaseContentGenerator):
         # 3. Determine the max allowed width for the original title (including placeholders)
         allowed_title_width = self.max_width - frame_width
 
-        # 4. Trim the content with placeholders
-        trimmed_content_with_placeholders = content_with_placeholders
-        words = trimmed_content_with_placeholders.split(' ')
+        # 4. Trim the content by removing non-placeholder words from the end
+        words = content_with_placeholders.split(' ')
+        words = [w for w in words if w]  # remove empty strings
+
         current_width = self._get_display_width(' '.join(words))
 
         while current_width > allowed_title_width:
             if not words:
                 break
-            words.pop()
-            current_width = self._get_display_width(' '.join(words))
-            # print(f"  After pop - current_width: {current_width}, words: {words}")
+
+            # Find the last word that is NOT a placeholder
+            last_trimmable_word_index = -1
+            for i in range(len(words) - 1, -1, -1):
+                if not words[i].startswith('__BRACKET_'):
+                    last_trimmable_word_index = i
+                    break
+
+            if last_trimmable_word_index != -1:
+                words.pop(last_trimmable_word_index)
+            else:
+                # All remaining words are placeholders, and it's still too long.
+                # Pop the last one to avoid an infinite loop.
+                words.pop()
+
+            # Recalculate current_width with actual bracketed texts for accurate trimming
+            temp_content_for_width_calc = ' '.join(words)
+            for placeholder, original_text in bracketed_texts_map.items():
+                temp_content_for_width_calc = temp_content_for_width_calc.replace(placeholder, original_text)
+            current_width = self._get_display_width(temp_content_for_width_calc)
+
         trimmed_content_with_placeholders = ' '.join(words)
 
         # 5. Reconstruct the title by replacing placeholders with original bracketed texts

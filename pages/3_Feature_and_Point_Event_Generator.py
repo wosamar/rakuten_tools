@@ -110,7 +110,7 @@ def generate_payloads(campaign_config, point_campaigns, feature_campaign, target
         try:
             item_handler = ItemHandler(env_settings.auth_token)
             if target_item_ids:
-                all_items_raw = item_handler.bulk_get_item(target_item_ids).get("results", [])
+                all_items_raw = item_handler.bulk_get_item(target_item_ids)
                 all_products = [ProductData.from_api(item) for item in all_items_raw]
                 st.info(f"共取得 {len(all_products)} 筆指定商品")
             else:

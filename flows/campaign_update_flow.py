@@ -52,11 +52,11 @@ class CampaignUpdateFlow:
         self.original_items_cache: Dict[str, ProductData] = {}
 
     def execute(
-        self,
-        all_products: List[ProductData],
-        config: CampaignConfig,
-        point_campaigns: List[Dict],
-        feature_campaign: Dict,
+            self,
+            all_products: List[ProductData],
+            config: CampaignConfig,
+            point_campaigns: List[Dict],
+            feature_campaign: Dict,
     ) -> Dict[str, Dict]:
         """
         Executes the workflow by categorizing items and generating payloads.
@@ -85,7 +85,6 @@ class CampaignUpdateFlow:
             for k, v in self.original_items_cache.items()
             if not v.is_hidden
         }
-        print(len(visible_item_ids))
         categories = self._categorize_items(
             visible_ids=visible_item_ids,
             point_ids=set(item_to_point_rate.keys()),
@@ -115,11 +114,11 @@ class CampaignUpdateFlow:
         all_payloads.update(
             self._process_no_event_items(categories["no_event"], config)
         )
-
+        print("\n".join(categories["no_event"]))
         return all_payloads
 
     def _build_lookup_maps(
-        self, point_campaigns: List[Dict], feature_campaign: Dict
+            self, point_campaigns: List[Dict], feature_campaign: Dict
     ) -> Tuple[Dict[str, int], Dict[str, str]]:
         """Creates dictionaries mapping item IDs to their campaign-specific values."""
         item_to_point_rate = {
@@ -134,10 +133,10 @@ class CampaignUpdateFlow:
         return item_to_point_rate, item_to_campaign_code
 
     def _categorize_items(
-        self,
-        visible_ids: Set[str],
-        point_ids: Set[str],
-        feature_ids: Set[str],
+            self,
+            visible_ids: Set[str],
+            point_ids: Set[str],
+            feature_ids: Set[str],
     ) -> Dict[str, Set[str]]:
         """Sorts item IDs into four mutually exclusive categories."""
         point_and_feature_ids = point_ids.intersection(feature_ids)
@@ -154,11 +153,11 @@ class CampaignUpdateFlow:
         }
 
     def _process_point_feature_items(
-        self,
-        item_ids: Set[str],
-        config: CampaignConfig,
-        item_to_point_rate: Dict[str, int],
-        item_to_campaign_code: Dict[str, str],
+            self,
+            item_ids: Set[str],
+            config: CampaignConfig,
+            item_to_point_rate: Dict[str, int],
+            item_to_campaign_code: Dict[str, str],
     ) -> Dict[str, Dict]:
         """Processes items that are in both a point and a feature campaign."""
         if not item_ids:
@@ -185,15 +184,14 @@ class CampaignUpdateFlow:
                     point_rate=item_to_point_rate[item_id],
                     campaign_code=item_to_campaign_code[item_id],
                 )
-                if payload:
-                    payloads[item_id] = payload
+                payloads[item_id] = payload
         return payloads
 
     def _process_point_only_items(
-        self,
-        item_ids: Set[str],
-        config: CampaignConfig,
-        item_to_point_rate: Dict[str, int],
+            self,
+            item_ids: Set[str],
+            config: CampaignConfig,
+            item_to_point_rate: Dict[str, int],
     ) -> Dict[str, Dict]:
         """Processes items that are only in a point campaign."""
         if not item_ids:
@@ -212,15 +210,14 @@ class CampaignUpdateFlow:
                 payload = generator.generate(
                     original_data, point_rate=item_to_point_rate[item_id]
                 )
-                if payload:
-                    payloads[item_id] = payload
+                payloads[item_id] = payload
         return payloads
 
     def _process_feature_only_items(
-        self,
-        item_ids: Set[str],
-        config: CampaignConfig,
-        item_to_campaign_code: Dict[str, str],
+            self,
+            item_ids: Set[str],
+            config: CampaignConfig,
+            item_to_campaign_code: Dict[str, str],
     ) -> Dict[str, Dict]:
         """Processes items that are only in a feature campaign."""
         if not item_ids:
@@ -237,12 +234,11 @@ class CampaignUpdateFlow:
                 payload = generator.generate(
                     original_data, campaign_code=item_to_campaign_code[item_id]
                 )
-                if payload:
-                    payloads[item_id] = payload
+                payloads[item_id] = payload
         return payloads
 
     def _process_no_event_items(
-        self, item_ids: Set[str], config: CampaignConfig
+            self, item_ids: Set[str], config: CampaignConfig
     ) -> Dict[str, Dict]:
         """Processes items that are not in any campaign."""
         if not item_ids or not config.no_event_html_format:
@@ -254,8 +250,7 @@ class CampaignUpdateFlow:
             original_data = self.original_items_cache.get(item_id)
             if original_data:
                 payload = generator.generate(original_data)
-                if payload:
-                    payloads[item_id] = payload
+                payloads[item_id] = payload
         return payloads
 
     def _process_point_events(self, data: Dict) -> Dict[str, Dict]:
