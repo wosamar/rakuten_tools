@@ -24,7 +24,7 @@ def test_campaign_update_flow(campaign_data):
     all_products = [ProductData(**p) for p in input_data["all_products"]]
     config = CampaignConfig(**input_data["config"])
     point_campaigns = input_data["point_campaigns"]
-    feature_campaign = input_data["feature_campaign"]
+    feature_campaigns = input_data["feature_campaigns"]
 
     flow = CampaignUpdateFlow()
 
@@ -33,7 +33,7 @@ def test_campaign_update_flow(campaign_data):
         all_products=all_products,
         config=config,
         point_campaigns=point_campaigns,
-        feature_campaign=feature_campaign,
+        feature_campaigns=feature_campaigns,
     )
 
     # 3. Assert

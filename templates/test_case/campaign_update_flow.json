@@ -80,13 +80,15 @@
         ]
       }
     ],
-    "feature_campaign": {
-      "campaign_code": "feature_campaign_code",
-      "items": [
-        "feature_item",
-        "point_and_feature_item"
-      ]
-    }
+    "feature_campaigns": [
+      {
+        "campaign_code": "feature_campaign_code",
+        "items": [
+          "feature_item",
+          "point_and_feature_item"
+        ]
+      }
+    ]
   },
   "out_put": {
     "point_and_feature_item": {
