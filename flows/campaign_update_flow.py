@@ -56,7 +56,7 @@ class CampaignUpdateFlow:
             all_products: List[ProductData],
             config: CampaignConfig,
             point_campaigns: List[Dict],
-            feature_campaign: Dict,
+            feature_campaigns: List[Dict],
     ) -> Dict[str, Dict]:
         """
         Executes the workflow by categorizing items and generating payloads.
@@ -75,10 +75,10 @@ class CampaignUpdateFlow:
             p.manage_number: p for p in all_products if p.manage_number
         }
         item_to_point_rate, item_to_campaign_code = self._build_lookup_maps(
-            point_campaigns, feature_campaign
+            point_campaigns, feature_campaigns
         )
 
-        # TODO: 修正字數計算問題
+        # TODO: 修正字數計算問題（測試裁切時是否計入保護字元（【】））
         # 2. Categorize all items into mutually exclusive groups.
         visible_item_ids = {
             k
@@ -118,7 +118,7 @@ class CampaignUpdateFlow:
         return all_payloads
 
     def _build_lookup_maps(
-            self, point_campaigns: List[Dict], feature_campaign: Dict
+            self, point_campaigns: List[Dict], feature_campaigns: List[Dict]
     ) -> Tuple[Dict[str, int], Dict[str, str]]:
         """Creates dictionaries mapping item IDs to their campaign-specific values."""
         item_to_point_rate = {
@@ -126,10 +126,11 @@ class CampaignUpdateFlow:
             for campaign in point_campaigns
             for item in campaign.get("items", [])
         }
-        campaign_code = feature_campaign.get("campaign_code", "")
-        item_to_campaign_code = {
-            item: campaign_code for item in feature_campaign.get("items", [])
-        }
+        item_to_campaign_code = {}
+        for campaign in feature_campaigns:
+            campaign_code = campaign.get("campaign_code", "")
+            for item in campaign.get("items", []):
+                item_to_campaign_code[item] = campaign_code
         return item_to_point_rate, item_to_campaign_code
 
     def _categorize_items(

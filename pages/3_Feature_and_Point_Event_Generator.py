@@ -28,8 +28,9 @@ class SessionStateKeys:
     POINT_CAMPAIGN_IDS_PREFIX = "p{}_ids"
 
     # Feature Campaign
-    FEATURE_CAMPAIGN_CODE = "feature_campaign_code"
-    FEATURE_IDS = "feature_ids"
+    FEATURE_CAMPAIGN_CODE_PREFIX = "f{}_campaign_code"
+    FEATURE_IDS_PREFIX = "f{}_ids"
+    NUM_FEATURE_CAMPAIGNS = "num_feature_campaigns"
 
 
 def init_session_state():
@@ -50,10 +51,12 @@ def init_session_state():
     if SessionStateKeys.NO_EVENT_HTML not in st.session_state:
         st.session_state[
             SessionStateKeys.NO_EVENT_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/></a><a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/></a>{original_html}'
-    if SessionStateKeys.FEATURE_CAMPAIGN_CODE not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = ""
-    if SessionStateKeys.FEATURE_IDS not in st.session_state:
-        st.session_state[SessionStateKeys.FEATURE_IDS] = ""
+    if SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(1) not in st.session_state:
+        st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(1)] = ""
+    if SessionStateKeys.FEATURE_IDS_PREFIX.format(1) not in st.session_state:
+        st.session_state[SessionStateKeys.FEATURE_IDS_PREFIX.format(1)] = ""
+    if SessionStateKeys.NUM_FEATURE_CAMPAIGNS not in st.session_state:
+        st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] = 1
     if "final_payloads" not in st.session_state:
         st.session_state["final_payloads"] = []
 
@@ -91,11 +94,14 @@ def render_config_uploader():
                         st.session_state[SessionStateKeys.POINT_CAMPAIGN_IDS_PREFIX.format(key_suffix)] = "\n".join(
                             campaign.get("items", []))
 
-                if "feature_campaign" in uploaded_data:
-                    st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = uploaded_data["feature_campaign"].get(
-                        "campaign_code", "")
-                    st.session_state[SessionStateKeys.FEATURE_IDS] = "\n".join(
-                        uploaded_data["feature_campaign"].get("items", []))
+                if "feature_campaigns" in uploaded_data:
+                    st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] = len(uploaded_data["feature_campaigns"])
+                    for i, campaign in enumerate(uploaded_data["feature_campaigns"]):
+                        key_suffix = str(i + 1)
+                        st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(key_suffix)] = campaign.get(
+                            "campaign_code", "")
+                        st.session_state[SessionStateKeys.FEATURE_IDS_PREFIX.format(key_suffix)] = "\n".join(
+                            campaign.get("items", []))
 
                 st.success("設定檔已成功載入！")
             except json.JSONDecodeError:
@@ -104,7 +110,7 @@ def render_config_uploader():
                 st.error(f"載入設定檔時發生錯誤: {e}")
 
 
-def generate_payloads(campaign_config, point_campaigns, feature_campaign, target_item_ids: list[str] | None = None):
+def generate_payloads(campaign_config, point_campaigns, feature_campaigns, target_item_ids: list[str] | None = None):
     # --- Get All Products ---
     with st.spinner("正在從後台取得所有商品資料..."):
         try:
@@ -128,7 +134,7 @@ def generate_payloads(campaign_config, point_campaigns, feature_campaign, target
             all_products=all_products,
             config=campaign_config,
             point_campaigns=point_campaigns,
-            feature_campaign=feature_campaign,
+            feature_campaigns=feature_campaigns,
         )
     st.session_state["final_payloads"] = final_payloads
 
@@ -253,7 +259,7 @@ def show_page():
                 if points_key not in st.session_state:
                     st.session_state[points_key] = config["default_points"]
                 config["point_rate"] = st.number_input(
-                    "點數",
+                    "點數(point_rate)",
                     key=points_key,
                     min_value=1,
                     step=5
@@ -262,7 +268,6 @@ def show_page():
                 if ids_key not in st.session_state:
                     st.session_state[ids_key] = ""
                 config["items"] = st.text_area("ID列表", key=ids_key, height=300)
-
     with tab_feature:
         st.markdown("#### 特輯活動設定")
         feature_title_format = st.text_input(
@@ -276,8 +281,33 @@ def show_page():
         )
         st.write("---")
         st.markdown("#### 特輯商品清單")
-        feature_campaign_code = st.text_input("活動代號", key=SessionStateKeys.FEATURE_CAMPAIGN_CODE)
-        feature_item_list = st.text_area("ID列表", key=SessionStateKeys.FEATURE_IDS)
+        st.text("特輯商品清單最多四種，最少一種")
+
+        # Buttons to add/remove feature campaigns
+        col_add, col_remove = st.columns([1, 10])
+        with col_add:
+            if st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] < 4 and st.button("新增特輯活動"):
+                st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] += 1
+                # Initialize new campaign's session state
+                new_suffix = str(st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS])
+                st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(new_suffix)] = ""
+                st.session_state[SessionStateKeys.FEATURE_IDS_PREFIX.format(new_suffix)] = ""
+        with col_remove:
+            if st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] > 1 and st.button("移除上一個特輯活動"):
+                # Clear session state for the removed campaign
+                removed_suffix = str(st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS])
+                del st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(removed_suffix)]
+                del st.session_state[SessionStateKeys.FEATURE_IDS_PREFIX.format(removed_suffix)]
+                st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] -= 1
+
+        # Render input fields for each feature campaign
+        feature_cols = st.columns(st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS])
+        for i in range(1, st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] + 1):
+            key_suffix = str(i)
+            with feature_cols[i-1]:
+                st.markdown(f"##### 特輯活動 {key_suffix}")
+                st.text_input("活動代號(campaign_code)", key=SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(key_suffix))
+                st.text_area("ID列表", key=SessionStateKeys.FEATURE_IDS_PREFIX.format(key_suffix), height=300)
 
     with tab_no_event:
         st.markdown("#### 無活動商品設定")
@@ -297,12 +327,18 @@ def show_page():
                 "items": list(item_ids)
             })
 
-    # --- Collect Feature Campaign ---
-    feature_item_ids = {line.strip() for line in feature_item_list.split('\n') if line.strip()}
-    feature_campaign = {
-        "campaign_code": feature_campaign_code,
-        "items": list(feature_item_ids)
-    }
+    # --- Collect Feature Campaigns ---
+    feature_campaigns = []
+    for i in range(1, st.session_state[SessionStateKeys.NUM_FEATURE_CAMPAIGNS] + 1):
+        key_suffix = str(i)
+        campaign_code = st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE_PREFIX.format(key_suffix)]
+        item_list_str = st.session_state[SessionStateKeys.FEATURE_IDS_PREFIX.format(key_suffix)]
+        feature_item_ids = {line.strip() for line in item_list_str.split('\n') if line.strip()}
+        if campaign_code or feature_item_ids:
+            feature_campaigns.append({
+                "campaign_code": campaign_code,
+                "items": list(feature_item_ids)
+            })
 
     # --- Setup and Execute Campaign Flow ---
     campaign_config = CampaignConfig(
@@ -324,7 +360,7 @@ def show_page():
         st.session_state["final_payloads"] = []  # Clear previous results
         st.session_state["page_number"] = 1  # Reset page number
         target_item_ids = list(set(line.strip() for line in target_item_ids_str.split('\n') if line.strip()))
-        generate_payloads(campaign_config, point_campaigns, feature_campaign, target_item_ids)
+        generate_payloads(campaign_config, point_campaigns, feature_campaigns, target_item_ids)
 
     # --- Display Results ---
     render_results()
@@ -341,7 +377,7 @@ def show_page():
     combined_data = {
         "config": campaign_config.model_dump(),  # Assuming CampaignConfig has a .model_dump() method
         "point_campaigns": point_campaigns,
-        "feature_campaign": feature_campaign,
+        "feature_campaigns": feature_campaigns,
     }
     json_download_str = json.dumps(combined_data, indent=4, ensure_ascii=False)
     st.download_button(
