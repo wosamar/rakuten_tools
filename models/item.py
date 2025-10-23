@@ -134,7 +134,7 @@ class ProductData(BaseModel):
         title = data.get("title")
 
         # Handle different hidden flags
-        is_hidden = data.get("isHiddenItem", False)
+        is_hidden = data.get("hideItem", False)
 
         # Use salesDescription if present, else fallback to pc_desc
         sales_desc = data.get("salesDescription") or pc_desc

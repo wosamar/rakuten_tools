@@ -46,10 +46,10 @@ def init_session_state():
         st.session_state[SessionStateKeys.FEATURE_TITLE] = "{original_title}{campaign_code}"
     if SessionStateKeys.FEATURE_HTML not in st.session_state:
         st.session_state[
-            SessionStateKeys.FEATURE_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
+            SessionStateKeys.FEATURE_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/></a>{original_html}'
     if SessionStateKeys.NO_EVENT_HTML not in st.session_state:
         st.session_state[
-            SessionStateKeys.NO_EVENT_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="1024mr_kv_1280.jpg"width="100%"/>a>{original_html}'
+            SessionStateKeys.NO_EVENT_HTML] = '<a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/></a><a href="https://www.rakuten.co.jp/giftoftw/contents/20251024_mr/"><img src="https://image.rakuten.co.jp/giftoftw/cabinet/campagin/202510mr/1024mr_kv_1280.jpg"width="100%"/></a>{original_html}'
     if SessionStateKeys.FEATURE_CAMPAIGN_CODE not in st.session_state:
         st.session_state[SessionStateKeys.FEATURE_CAMPAIGN_CODE] = ""
     if SessionStateKeys.FEATURE_IDS not in st.session_state:
@@ -62,7 +62,6 @@ def render_config_uploader():
     st.subheader("上傳設定檔")
     uploaded_config_file = st.file_uploader("上傳設定 JSON 檔案", type=["json"],
                                             help="上傳包含 config, point_campaigns, feature_campaign 的 JSON 檔案")
-
 
     if st.button("載入設定檔"):
         if uploaded_config_file is None:
@@ -105,17 +104,23 @@ def render_config_uploader():
                 st.error(f"載入設定檔時發生錯誤: {e}")
 
 
-def generate_payloads(campaign_config, point_campaigns, feature_campaign):
+def generate_payloads(campaign_config, point_campaigns, feature_campaign, target_item_ids: list[str] | None = None):
     # --- Get All Products ---
-    print("========================")
     with st.spinner("正在從後台取得所有商品資料..."):
         try:
             item_handler = ItemHandler(env_settings.auth_token)
-            all_items_raw = item_handler.search_item({"updatedFrom":f"{date.today().year}-01-01"}, page_size=100, max_page=20)
-            all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
-            st.info(f"共取得 {len(all_products)} 筆商品")
+            if target_item_ids:
+                all_items_raw = item_handler.bulk_get_item(target_item_ids).get("results", [])
+                all_products = [ProductData.from_api(item) for item in all_items_raw]
+                st.info(f"共取得 {len(all_products)} 筆指定商品")
+            else:
+                all_items_raw = item_handler.search_item({"updatedFrom": f"{date.today().year}-01-01"}, page_size=100,
+                                                         max_page=20)
+                all_products = [ProductData.from_api(item.get("item")) for item in all_items_raw]
+                st.info(f"共取得 {len(all_products)} 筆商品")
         except MaxRetryError:
             st.error("連線超時，請再試一次")
+            return
 
     with st.spinner("正在生成Payload..."):
         flow = CampaignUpdateFlow()
@@ -127,10 +132,40 @@ def generate_payloads(campaign_config, point_campaigns, feature_campaign):
         )
     st.session_state["final_payloads"] = final_payloads
 
-    # --- Display Results ---
-    st.write("---")
-    st.subheader("生成結果")
-    st.json(json.dumps(final_payloads, indent=4, ensure_ascii=False), expanded=False)
+
+def render_results():
+    if "final_payloads" in st.session_state and st.session_state["final_payloads"]:
+        st.write("---")
+        st.subheader("生成結果")
+        payload_items = list(st.session_state["final_payloads"].items())
+        total_items = len(payload_items)
+        items_per_page = 20
+        total_pages = (total_items + items_per_page - 1) // items_per_page
+
+        if total_pages > 0:
+            # Initialize page_number in session state if it doesn't exist
+            if "page_number" not in st.session_state:
+                st.session_state["page_number"] = 1
+
+            # Ensure page_number is within valid range
+            if st.session_state["page_number"] > total_pages:
+                st.session_state["page_number"] = total_pages
+
+            page_number = st.number_input(
+                '頁數',
+                min_value=1,
+                max_value=total_pages,
+                key="page_number",
+                step=1
+            )
+
+            start_index = (page_number - 1) * items_per_page
+            end_index = min(start_index + items_per_page, total_items)
+            st.text(f"總筆數: {total_items} / 總頁數: {total_pages} / 目前顯示第 {start_index + 1}-{end_index} 筆")
+
+            paginated_payloads = dict(payload_items[start_index:end_index])
+
+            st.json(json.dumps(paginated_payloads, indent=4, ensure_ascii=False), expanded=False)
 
 
 def execute_item_update():
@@ -142,18 +177,23 @@ def execute_item_update():
     updated_count = 0
     failed_updates = []
 
-    for item_id, item_data in st.session_state["final_payloads"].items():
+    total_items = len(st.session_state["final_payloads"])
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for i, (item_id, item_data) in enumerate(st.session_state["final_payloads"].items()):
         try:
             # Create a ProductData object with only the manage_number and the generated payload
             # The to_patch_payload method will handle filtering None values
-            product_to_update = ProductData(
-                manage_number=item_id,
-                **item_data["generated_payload"]
-            )
-            item_handler.patch_item(product_to_update)
+            status_text.text(f"正在更新商品: {item_id} ({i + 1}/{total_items})")
+            item_handler.patch_item(item_id, item_data)
             updated_count += 1
         except Exception as e:
             failed_updates.append(f"商品 {item_id} 更新失敗: {e}")
+
+        progress_bar.progress((i + 1) / total_items)
+
+    status_text.text("更新完成！")
 
     if updated_count > 0:
         st.success(f"成功更新 {updated_count} 項商品！")
@@ -276,11 +316,22 @@ def show_page():
     )
 
     # --- Generate Payloads ---
+    st.write("---")
+    st.subheader("指定商品")
+    target_item_ids_str = st.text_area("指定商品 manage_number (一行一個)，如果為空則處理所有商品")
+
     if st.button("生成"):
-        generate_payloads(campaign_config, point_campaigns, feature_campaign)
+        st.session_state["final_payloads"] = []  # Clear previous results
+        st.session_state["page_number"] = 1  # Reset page number
+        target_item_ids = list(set(line.strip() for line in target_item_ids_str.split('\n') if line.strip()))
+        generate_payloads(campaign_config, point_campaigns, feature_campaign, target_item_ids)
+
+    # --- Display Results ---
+    render_results()
 
     st.write("---")
     st.subheader("更新商品資訊")
+    st.info("更新前請先至後台下載 csv 備份")
 
     if st.button("執行商品更新"):
         execute_item_update()

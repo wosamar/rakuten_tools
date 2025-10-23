@@ -57,11 +57,11 @@ class ItemHandler:
 
         return resp.json()
 
-    def patch_item(self, product: ProductData):
-        url = f"{self.base_url}/manage-numbers/{product.manage_number}"
-        data = product.to_patch_payload()
-        resp = requests.patch(url, headers=self.headers, data=json.dumps(data))
+    def patch_item(self, manage_number, payload):
+        url = f"{self.base_url}/manage-numbers/{manage_number}"
+        resp = requests.patch(url, headers=self.headers, data=json.dumps(payload))
         resp.raise_for_status()
+        print(resp.text)
 
         return resp
 
@@ -96,46 +96,46 @@ def update_alt_flow(auth_token: str, manage_number: str):
         else:
             images_payload.append(img)  # 避免覆蓋「海外通販」圖片
 
-    payload = {"manage_number": manage_number, "images": images_payload}
+    payload = {"images": images_payload}
 
-    patch_resp = item_handler.patch_item(ProductData(**payload))
+    patch_resp = item_handler.patch_item(manage_number, payload)
 
     return {"alt_text": alt_text, "resp": patch_resp}
 
 
 # 更新選項
 # TODO:整理流程
-def patch_customization_option(auth_token: str, new_option: dict):
-    params = {
-        "isHiddenItem": "false"
-    }
-    item_handler = ItemHandler(auth_token)
-    item_data = item_handler.search_item(params)
-
-    manage_numbers = []
-
-    for data in item_data:
-        manage_number = data.get("item").get("manageNumber")
-        options = data.get("item").get("customizationOptions", [])
-
-        print(manage_number)
-
-        # 檢查是否已有相同 displayName（比對前20個字）
-        if any(opt.get("displayName")[:20] == new_option["displayName"][:20] for opt in options):
-            print(f"跳過 {manage_number}，因為已存在相同 displayName")
-            continue
-
-        options.append(new_option)
-        product = ProductData(
-            manage_number=manage_number,
-            customization_options=options
-        )
-        item_handler.patch_item(product)
-
-        manage_numbers.append(manage_number)
-        # break
-
-    print(f"已更新{len(manage_numbers)}項商品")
+# def patch_customization_option(auth_token: str, new_option: dict):
+#     params = {
+#         "isHiddenItem": "false"
+#     }
+#     item_handler = ItemHandler(auth_token)
+#     item_data = item_handler.search_item(params)
+#
+#     manage_numbers = []
+#
+#     for data in item_data:
+#         manage_number = data.get("item").get("manageNumber")
+#         options = data.get("item").get("customizationOptions", [])
+#
+#         print(manage_number)
+#
+#         # 檢查是否已有相同 displayName（比對前20個字）
+#         if any(opt.get("displayName")[:20] == new_option["displayName"][:20] for opt in options):
+#             print(f"跳過 {manage_number}，因為已存在相同 displayName")
+#             continue
+#
+#         options.append(new_option)
+#         product = ProductData(
+#             manage_number=manage_number,
+#             customization_options=options
+#         )
+#         item_handler.patch_item_with_model(manage_number,product)
+#
+#         manage_numbers.append(manage_number)
+#         # break
+#
+#     print(f"已更新{len(manage_numbers)}項商品")
 
 
 if __name__ == '__main__':

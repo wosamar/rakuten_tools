@@ -75,7 +75,7 @@ def update_item_and_show_result(item_handler, manage_number, htmls):
         sales_description=htmls.get("pc_sub"),
     )
     try:
-        item_handler.patch_item(product_data)
+        item_handler.patch_item(manage_number, product_data.to_patch_payload())
     except Exception as e:
         st.error(f"商品 {manage_number} 更新失敗，錯誤訊息：{e}")
     else:

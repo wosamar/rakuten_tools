@@ -78,12 +78,14 @@ class CampaignUpdateFlow:
             point_campaigns, feature_campaign
         )
 
+        # TODO: 修正字數計算問題
         # 2. Categorize all items into mutually exclusive groups.
         visible_item_ids = {
             k
             for k, v in self.original_items_cache.items()
             if not v.is_hidden
         }
+        print(len(visible_item_ids))
         categories = self._categorize_items(
             visible_ids=visible_item_ids,
             point_ids=set(item_to_point_rate.keys()),
@@ -183,7 +185,8 @@ class CampaignUpdateFlow:
                     point_rate=item_to_point_rate[item_id],
                     campaign_code=item_to_campaign_code[item_id],
                 )
-                payloads[item_id] = payload
+                if payload:
+                    payloads[item_id] = payload
         return payloads
 
     def _process_point_only_items(
@@ -209,7 +212,8 @@ class CampaignUpdateFlow:
                 payload = generator.generate(
                     original_data, point_rate=item_to_point_rate[item_id]
                 )
-                payloads[item_id] = payload
+                if payload:
+                    payloads[item_id] = payload
         return payloads
 
     def _process_feature_only_items(
@@ -233,7 +237,8 @@ class CampaignUpdateFlow:
                 payload = generator.generate(
                     original_data, campaign_code=item_to_campaign_code[item_id]
                 )
-                payloads[item_id] = payload
+                if payload:
+                    payloads[item_id] = payload
         return payloads
 
     def _process_no_event_items(
@@ -249,7 +254,8 @@ class CampaignUpdateFlow:
             original_data = self.original_items_cache.get(item_id)
             if original_data:
                 payload = generator.generate(original_data)
-                payloads[item_id] = payload
+                if payload:
+                    payloads[item_id] = payload
         return payloads
 
     def _process_point_events(self, data: Dict) -> Dict[str, Dict]:
