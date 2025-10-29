@@ -85,6 +85,7 @@ class CampaignUpdateFlow:
             for k, v in self.original_items_cache.items()
             if not v.is_hidden
         }
+        # TODO:調整流程以便批次更新
         categories = self._categorize_items(
             visible_ids=visible_item_ids,
             point_ids=set(item_to_point_rate.keys()),

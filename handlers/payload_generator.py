@@ -4,23 +4,23 @@ from typing import Optional, Dict
 from models.item import ProductData
 
 
+def get_display_width(text: str) -> int:
+    width = 0
+    for char in text:
+        if unicodedata.east_asian_width(char) in ('F', 'W', 'A'):
+            width += 2
+        else:
+            width += 1
+    return width
+
+
 class BaseContentGenerator:
     """
     Base class for content generators, providing common utility methods.
     """
 
     @staticmethod
-    def _get_display_width(text: str) -> int:
-        width = 0
-        for char in text:
-            if unicodedata.east_asian_width(char) in ('F', 'W', 'A'):
-                width += 2
-            else:
-                width += 1
-        return width
-
     def _apply_format_if_needed(
-            self,
             original_content: str,
             format_string: str,
             placeholder: str,
@@ -37,8 +37,6 @@ class BaseContentGenerator:
         processed_content = original_content
         if formatter_func:
             processed_content = formatter_func(original_content=original_content, **kwargs)
-
-
 
         # Define actual_prefix and actual_suffix here, before they are used
         parts = re.split(re.escape(placeholder), format_string)
@@ -79,6 +77,7 @@ class TitleGenerator(BaseContentGenerator):
         # 1. Extract bracketed text and replace with placeholders
         bracketed_texts_map = {}
         placeholder_counter = 0
+
         def replace_bracketed(match):
             nonlocal placeholder_counter
             placeholder = f"__BRACKET_{placeholder_counter}__"
@@ -93,7 +92,7 @@ class TitleGenerator(BaseContentGenerator):
         # 2. Calculate the width of the "frame" (the format string without original_title)
         temp_title_for_frame = self.title_format.replace("{original_title}", "")
         frame_text = temp_title_for_frame.format(original_title="", **kwargs)
-        frame_width = self._get_display_width(frame_text)
+        frame_width = get_display_width(frame_text)
 
         # 3. Determine the max allowed width for the original title (including placeholders)
         allowed_title_width = self.max_width - frame_width
@@ -102,7 +101,7 @@ class TitleGenerator(BaseContentGenerator):
         words = content_with_placeholders.split(' ')
         words = [w for w in words if w]  # remove empty strings
 
-        current_width = self._get_display_width(' '.join(words))
+        current_width = get_display_width(' '.join(words))
 
         while current_width > allowed_title_width:
             if not words:
@@ -126,7 +125,7 @@ class TitleGenerator(BaseContentGenerator):
             temp_content_for_width_calc = ' '.join(words)
             for placeholder, original_text in bracketed_texts_map.items():
                 temp_content_for_width_calc = temp_content_for_width_calc.replace(placeholder, original_text)
-            current_width = self._get_display_width(temp_content_for_width_calc)
+            current_width = get_display_width(temp_content_for_width_calc)
 
         trimmed_content_with_placeholders = ' '.join(words)
 
