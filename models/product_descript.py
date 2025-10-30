@@ -1,9 +1,6 @@
-from pathlib import Path
-
 from env_settings import EnvSettings
 
 env_settings = EnvSettings()
-cabinet_prefix = f"https://image.rakuten.co.jp/{env_settings.TENPO_NAME}/cabinet"
 
 
 class ImageInfo:

@@ -4,7 +4,6 @@ from typing import List, Dict
 import requests
 
 from env_settings import EnvSettings
-from models.item import ProductData
 
 env_settings = EnvSettings()
 
