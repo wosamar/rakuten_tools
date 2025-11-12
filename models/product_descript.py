@@ -2,7 +2,7 @@ from env_settings import EnvSettings
 
 env_settings = EnvSettings()
 
-
+# For HTML Generate
 class ImageInfo:
     def __init__(self, image_url: str, description: str, link: str):
         self.image_url = image_url

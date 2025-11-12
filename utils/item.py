@@ -1,9 +1,10 @@
 import json
+import os
+import requests
 from typing import List, Dict, Tuple
 
 from env_settings import EnvSettings
 from handlers.item_handler import ItemHandler
-from handlers.payload_generator import get_display_width
 from models.item import ProductData
 
 BASE_URL = "https://api.rms.rakuten.co.jp/es/2.0/items/manage-numbers"
@@ -68,18 +69,81 @@ def add_default_attributes(input_file: str, output_file: str = None):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+# 重置所有圖片說明
+def update_alt_flow(item_data, manage_number: str):
+    title = item_data.get("title", "")
+    alt_text = title.replace(" ", "")
+
+    images_payload = []
+    shop_name = manage_number.split("-")[-2]
+    for img in item_data.get("images", []):
+        location = img.get("location")
+        if shop_name in location:
+            images_payload.append({
+                "type": img.get("type"),
+                "location": location,
+                "alt": alt_text
+            })
+        else:
+            images_payload.append(img)  # 避免覆蓋「海外通販」圖片
+
+    payload = {"images": images_payload}
+
+    patch_resp = item_handler.patch_item(manage_number, payload)
+
+    return {"alt_text": alt_text, "resp": patch_resp}
+
+
+# 下載商品圖片
+# TODO:順便下載HTML
+def get_all_item_images(base_url: str, item_data: dict):
+    manage_number = item_data.get("manageNumber")
+    # 在 env_settings.output_dir 建立 image 資料夾，依照manage_number建立資料夾
+    image_dir = os.path.join(env_settings.output_dir, "image")
+    item_image_dir = os.path.join(image_dir, manage_number)
+    os.makedirs(item_image_dir, exist_ok=True)
+
+    locations = []
+    for img in item_data.get("images", []):
+        location = img.get("location")
+        locations.append(location)
+
+    locations.append(item_data.get("whiteBgImage").get("location"))
+
+    for variant in item_data.get("variants", {}).values():
+        for image in variant.get("images", []):
+            locations.append(image.get("location"))
+
+    for location in locations:
+        image_url = base_url + location
+        try:
+            response = requests.get(image_url, stream=True)
+            response.raise_for_status()  # Raise an exception for bad status codes
+
+            # Save the image
+            filename = os.path.basename(location)
+            filepath = os.path.join(item_image_dir, filename)
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            print(f"Downloaded {image_url} to {filepath}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading {image_url}: {e}")
+
+
 if __name__ == '__main__':
     item_handler = ItemHandler(env_settings.auth_token)
-    items = item_handler.search_item({"isHiddenItem": "false"}, 100, 10)
-
-    for item in items:
-        item = item.get("item") or item
-        title = item.get("title")
-        title_width = get_display_width(title)
-        if title_width >= 240:
-            manage_number = item.get("manageNumber")
-            print(manage_number)
-            print(title_width, item.get("title"))
+    # items = item_handler.search_item({"isHiddenItem": "false"}, 100, 10)
+    #
+    # for item in items:
+    #     item = item.get("item") or item
+    #     title = item.get("title")
+    #     title_width = get_display_width(title)
+    #     if title_width >= 240:
+    #         manage_number = item.get("manageNumber")
+    #         print(manage_number)
+    #         print(title_width, item.get("title"))
 
     # ids = []
     # items = item_handler.bulk_get_item(ids)
@@ -110,3 +174,16 @@ if __name__ == '__main__':
 
     # path = BASE_DIR / "items" / "tmp" / "variants.json"
     # add_default_attributes(path, BASE_DIR / "items" / "tmp" / "variants_with_attributes.json")
+
+    b_url = "https://cabinet.rms.rakuten.co.jp/shops/giftoftw/cabinet"
+    items = item_handler.bulk_get_item([
+        # "tra-emperorlove-01",
+        # "tra-fonming-01",
+        # "twe-piao-i-011",
+        # "tra-emperorlove-04",
+        "tra-emperorlove-02",
+        "tra-emperorlove-03",
+        "tra-emperorlove-05"
+    ])
+    for item in items:
+        get_all_item_images(b_url, item)

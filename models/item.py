@@ -92,6 +92,11 @@ class PointCampaign(BaseModel):
     benefits: Benefits  # ポイント情報
 
 
+class PurchasablePeriod(BaseModel):
+    start: str  # 販売開始日時
+    end: str  # 販売終了日時
+
+
 class ProductData(BaseModel):
     manage_number: str  # 商品管理番号（商品URL）
     item_number: Optional[str] = None  # 商品番号
@@ -105,6 +110,7 @@ class ProductData(BaseModel):
     standard_price: Optional[int] = None
     reference_price: Optional[int] = None
     point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
+    purchasable_period: Optional[PurchasablePeriod] = None  # 販売期間指定
     is_hidden: bool = False  # 倉庫指定
 
     # TODO:自動產生別名
@@ -129,12 +135,6 @@ class ProductData(BaseModel):
             # Fallback for search results or other flat structures
             pc_desc = data.get("descriptionForPC", "")
             sp_desc = data.get("descriptionForSmartPhone", "")
-
-        # Handle different title fields
-        title = data.get("title")
-
-        # Handle different hidden flags
-        is_hidden = data.get("hideItem", False)
 
         # Use salesDescription if present, else fallback to pc_desc
         sales_desc = data.get("salesDescription") or pc_desc
@@ -168,7 +168,7 @@ class ProductData(BaseModel):
         return cls(
             manage_number=data.get("manageNumber", ""),
             item_number=data.get("itemNumber"),
-            title=title,
+            title=data.get("title"),
             tagline=data.get("tagline"),
             product_description=ProductDescription(pc=pc_desc, sp=sp_desc),
             sales_description=sales_desc,
@@ -179,7 +179,7 @@ class ProductData(BaseModel):
             reference_price=reference_price,
             customization_options=customization_options,
             point_campaign=PointCampaign(**data['pointCampaign']) if 'pointCampaign' in data else None,
-            is_hidden=is_hidden
+            is_hidden=data.get("hideItem", False)
         )
 
     def to_patch_payload(self) -> dict:

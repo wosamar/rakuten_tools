@@ -81,30 +81,8 @@ class ItemHandler:
 
         return results
 
-
-# 重置所有圖片說明
-def update_alt_flow(auth_token: str, manage_number: str):
-    item_handler = ItemHandler(auth_token)
-    item_data = item_handler.get_item(manage_number)
-
-    title = item_data.get("title", "")
-    alt_text = title.replace(" ", "")
-
-    images_payload = []
-    shop_name = manage_number.split("-")[-2]
-    for img in item_data.get("images", []):
-        location = img.get("location")
-        if shop_name in location:
-            images_payload.append({
-                "type": img.get("type"),
-                "location": location,
-                "alt": alt_text
-            })
-        else:
-            images_payload.append(img)  # 避免覆蓋「海外通販」圖片
-
-    payload = {"images": images_payload}
-
-    patch_resp = item_handler.patch_item(manage_number, payload)
-
-    return {"alt_text": alt_text, "resp": patch_resp}
+    def upsert_item(self, manage_number: str, item: Dict):
+        url = f"{self.base_url}/manage-numbers/{manage_number}"
+        resp = requests.put(url, headers=self.headers, data=json.dumps(item))
+        resp.raise_for_status()
+        return resp
