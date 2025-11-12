@@ -1,5 +1,6 @@
 import traceback
 from typing import Dict, Any
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -13,12 +14,14 @@ class SSCampaignUpdateFlow:
     處理超級特賣 (Super Sale) 活動商品更新的流程。
     """
 
-    def __init__(self, auth_token: str, logger=print):
+    def __init__(self, auth_token: str, campaign_start: str, campaign_end: str, logger = print):
         self.item_handler = ItemHandler(auth_token)
         self.category_handler = CategoryHandler(auth_token)
         self.inventory_handler = InventoryHandler(auth_token)
         self.logger = logger
-        # TODO:改為從外部設定 purchasablePeriod
+        self.jst = timezone(timedelta(hours=9))
+        self.campaign_start = datetime.fromisoformat(campaign_start).astimezone(self.jst)
+        self.campaign_end = datetime.fromisoformat(campaign_end).astimezone(self.jst)
 
     def run(self, manage_numbers: list[str]):
         """
@@ -83,9 +86,13 @@ class SSCampaignUpdateFlow:
         self.logger(f"  - Creating new campaign item: {new_manage_number}...")
         new_item = item_data.copy()
         new_item["hideItem"] = False
+        
+        # 新商品的販售時間：當下-活動開始前一分鐘
+        start_time = datetime.now(self.jst)
+        end_time = self.campaign_start - timedelta(minutes=1)
         new_item["purchasablePeriod"] = {
-            "start": "2025-11-13T11:00:00+09:00",
-            "end": "2025-12-02T19:59:59+09:00"
+            "start": start_time.isoformat(timespec='seconds'),
+            "end": end_time.isoformat(timespec='seconds')
         }
 
         # 移除 API 不接受的欄位
@@ -134,10 +141,11 @@ class SSCampaignUpdateFlow:
         payload = {
             "hideItem": True,
             "purchasablePeriod": {
-                "start": "2025-12-03T20:00:00+09:00",
-                "end": "2025-12-11T01:59:59+09:00"
+                "start": self.campaign_start.isoformat(timespec='seconds'),
+                "end": self.campaign_end.isoformat(timespec='seconds')
             }
         }
+        print(payload)
         self.item_handler.patch_item(manage_number, payload)
 
     def _log_summary(self, total: int, successful: list, failed: dict):
