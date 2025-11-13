@@ -145,7 +145,6 @@ class SSCampaignUpdateFlow:
                 "end": self.campaign_end.isoformat(timespec='seconds')
             }
         }
-        print(payload)
         self.item_handler.patch_item(manage_number, payload)
 
     def _log_summary(self, total: int, successful: list, failed: dict):

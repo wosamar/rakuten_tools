@@ -50,7 +50,7 @@ def main():
     st.set_page_config(page_title="SS Campaign Updater", page_icon="🚀")
 
     st.title("🚀 SS Campaign Updater")
-    st.write("此頁面用於執行超級特賣活動商品的更新流程。")
+    st.write("此頁面用於複製現有商品以準備超級特賣活動報名。")
 
     env_settings = EnvSettings()
     auth_token = env_settings.auth_token
