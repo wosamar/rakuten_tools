@@ -14,6 +14,27 @@ class ProductDescription(BaseModel):
     sp: Optional[str] = None  # スマートフォン用商品説明文(mobile)
 
 
+class DisplayTypeEnum(str, Enum):
+    REFERENCE_PRICE = "REFERENCE_PRICE"
+    SHOP_SETTING = "SHOP_SETTING"
+    OPEN_PRICE = "OPEN_PRICE"
+
+
+class ReferencePrice(BaseModel):
+    display_type: DisplayTypeEnum = Field(..., alias="displayType")
+    type: Optional[int] = None
+    value: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_reference_price(self):
+        if self.display_type == DisplayTypeEnum.REFERENCE_PRICE:
+            if self.type is None:
+                raise ValueError("type is required when displayType is REFERENCE_PRICE")
+            if self.type != 4 and self.value is None:
+                raise ValueError("value is required when displayType is REFERENCE_PRICE and type is not 4")
+        return self
+
+
 # === Customization 定義 ===
 
 class CustomizationInputType(str, Enum):
@@ -108,7 +129,7 @@ class ProductData(BaseModel):
     genre_id: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
     standard_price: Optional[int] = None
-    reference_price: Optional[int] = None
+    reference_price_info: Optional[ReferencePrice] = Field(default=None, alias="referencePrice")
     point_campaign: Optional[PointCampaign] = Field(default=None, alias="pointCampaign")  # ポイント変倍情報
     purchasable_period: Optional[PurchasablePeriod] = None  # 販売期間指定
     is_hidden: bool = False  # 倉庫指定
@@ -139,17 +160,13 @@ class ProductData(BaseModel):
         # Use salesDescription if present, else fallback to pc_desc
         sales_desc = data.get("salesDescription") or pc_desc
 
-        def get_reference_price(variant: dict) -> Optional[int]:
-            ref = variant.get("referencePrice")
-            if ref and ref.get("displayType") == "REFERENCE_PRICE":
-                return int(ref.get("value", 0))
-            return None
-
         tags = [str(tag) for tag in data.get("tags", [])]
 
         first_variant = next(iter(data.get("variants", {}).values()), {})
         standard_price = first_variant.get("standardPrice")
-        reference_price = get_reference_price(first_variant)
+        
+        reference_price_data = first_variant.get("referencePrice")
+        reference_price_info = ReferencePrice(**reference_price_data) if reference_price_data else None
 
         co_raw = data.get("customizationOptions", []) or []
         customization_options = []
@@ -176,7 +193,7 @@ class ProductData(BaseModel):
             genre_id=data.get("genreId"),
             tags=tags,
             standard_price=standard_price,
-            reference_price=reference_price,
+            reference_price_info=reference_price_info,
             customization_options=customization_options,
             point_campaign=PointCampaign(**data['pointCampaign']) if 'pointCampaign' in data else None,
             is_hidden=data.get("hideItem", False)

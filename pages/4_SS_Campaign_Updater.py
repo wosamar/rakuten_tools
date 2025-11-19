@@ -2,18 +2,9 @@ import streamlit as st
 from flows.ss_campaign_update_flow import SSCampaignUpdateFlow
 from env_settings import EnvSettings
 from datetime import datetime, timedelta, timezone
+from utils.streamlit_utils import parse_manage_numbers_input
 
 JST = timezone(timedelta(hours=9))
-
-
-def parse_input(input_string: str) -> list[str]:
-    """
-    解析使用者輸入的商品管理編號字串。
-    """
-    if not input_string:
-        return []
-    cleaned_string = input_string.replace('\n', ',')
-    return [mn.strip() for mn in cleaned_string.split(',') if mn.strip()]
 
 
 def run_flow(auth_token: str, manage_numbers: list[str], campaign_start: str, campaign_end: str):
@@ -69,7 +60,7 @@ def main():
     campaign_end_time = st.time_input("活動結束時間", value=datetime.strptime("01:59", "%H:%M").time())
 
     if st.button("開始執行 SS Campaign 更新流程"):
-        manage_numbers = parse_input(manage_numbers_input)
+        manage_numbers = parse_manage_numbers_input(manage_numbers_input)
         if not manage_numbers:
             st.warning("請輸入有效的商品管理編號。")
             return
