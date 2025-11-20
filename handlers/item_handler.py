@@ -86,3 +86,14 @@ class ItemHandler:
         resp = requests.put(url, headers=self.headers, data=json.dumps(item))
         resp.raise_for_status()
         return resp
+
+    def delete_item(self, manage_number: str):
+        url = f"{self.base_url}/manage-numbers/{manage_number}"
+        resp = requests.delete(url, headers=self.headers)
+        try:
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            print(f"Error deleting item {manage_number}: {e}")
+            print(f"Response content: {resp.text}")
+            raise
+        return resp
